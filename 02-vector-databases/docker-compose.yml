@@ -18,4 +18,6 @@ services:
       - ./ollama_storage:/root/.ollama
     environment:
       - OLLAMA_EMBEDDINGS=1
+    # FIX: Explicitly call the native entrypoint serve command to initialize all APIs cleanly
+    command: serve
     restart: always
