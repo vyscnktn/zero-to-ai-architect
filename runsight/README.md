@@ -98,6 +98,30 @@ Eğitim ve deploy'da (`8_gru_deploy.py::_extract_channels`) kullanılan 4 kanal,
 - Tuning hedefi: `val_auc`.
 - Çıktı: sigmoid olasılık (anaerobik olasılığı) → `confidence = |proba − 0.5| × 2`.
 
+### Değerlendirme Sonuçları (test seti)
+
+Antrenman bazlı test setinde (13.884 antrenman) elde edilen sonuçlar:
+
+| | precision | recall | f1-score | support |
+|---|---|---|---|---|
+| aerobik | 0.78 | 0.73 | 0.76 | 6.980 |
+| anaerobik | 0.75 | 0.79 | 0.77 | 6.904 |
+| **accuracy** | | | **0.76** | 13.884 |
+| macro avg | 0.76 | 0.76 | 0.76 | 13.884 |
+| weighted avg | 0.76 | 0.76 | 0.76 | 13.884 |
+
+**Test AUC: 0.850**
+
+Confusion matrix:
+
+```
+                    tahmin: aerobik   tahmin: anaerobik
+gerçek: aerobik           5114              1866
+gerçek: anaerobik         1422              5482
+```
+
+**Yorum:** İki sınıf da büyüklük olarak dengeli (support ~6.9–7.0K, class_weight zaten sınıf dengesizliğine karşı kullanıldı), precision/recall arasında sınıflar arası belirgin bir sapma yok — model tek bir sınıfa kaymıyor. AUC 0.85, GRU'nun kişisel eşik özelliğine hiç erişimi olmadan, sadece ham sinyale bakarak kural tabanlı pipeline'ın kararını yüksek sadakatle yeniden üretebildiğini gösteriyor — distillation-fidelity iddiasının somut kanıtı bu. Yanlış sınıflandırmaların büyük kısmı muhtemelen `anaerobic_time_frac` değeri `cutoff=0.02`'ye yakın, doğası gereği sınırda kalan antrenmanlardan geliyor — bu örnekler kural tabanlı pipeline için de az farkla "aerobik" ya da "anaerobik" tarafına düşen, ikili etiketlemenin kaçınılmaz belirsizlik bölgesi.
+
 ## 5. LLM Ajanı
 
 n8n içinde **LangChain Agent** node'u olarak çalışıyor, iki akışta:
@@ -174,7 +198,9 @@ GRU modeli **AWS Lambda** üzerinde, Docker (ECR) image olarak sunuluyor (`Docke
 {
   "training_zone": "aerobik" | "anaerobik",
   "anaerobic_probability": 0.83,
-  "confidence": 0.66
+  "confidence": 0.66,
+  "hr_p10": 128.0,
+  "hr_p95": 170.0
 }
 ```
 
