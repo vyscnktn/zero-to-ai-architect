@@ -1,0 +1,3 @@
+Using Max Heart Rate
+
+Search your sport-specific training and racing data from the past year to find the highest heart rate of your season for running or cycling. Consider this your current maximum heart rate. On the accompanying zone Table below use the “Maximal (MHR)” column to determine your zones. All this takes is a calculator and you can quickly set up your zones. You’re done. This one is easy. Caution: Do not use 220 minus your age to find max heart rate as this is as likely to be wrong as right. And it could be way off.  However, your known max heart rate from the past twelve months is likely to be much more accurate.
