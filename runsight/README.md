@@ -182,6 +182,17 @@ Devam: `HTTP Request` (GitHub'dan `post_workout_prompt.md` çek) → `AI Agent` 
 
 `Query Data Tool` (vectorStoreInMemory, retrieve-as-tool, aynı Embeddings modeli ile) → `AI Agent`'ra "knowledge_base" aracı olarak bağlı.
 
+**IV. Haftalık Takip ve Öğrenme Döngüsü (bonus — İleri seviye)**
+
+`Haftalık Tetikleyici` (Schedule Trigger, her Pazar 20:00 — cron `0 20 * * 0`) → `Tüm Kullanıcılar` (users sheet) → `Aktif Planı Olanlar` (aktif bir `training_plan`'ı olanları filtrele) → `Loop Over Items` (kullanıcı başına döngü):
+
+- `Haftalık Antrenmanlar` (trainings sheet'ten `chat_id`'ye göre kullanıcının kayıtları) → `Haftalık Özet Hesapla` (Code): son 7 günün antrenmanlarını filtreler; toplam km, antrenman sayısı ve zone dağılımını (aerobik/anaerobik) hesaplar.
+- `Antrenman Var mı?` (`antrenman_sayisi > 0`):
+  - **False** → `Motivasyon Mesajı` (Telegram) — bu hafta hiç antrenman yoksa nazik bir hatırlatma gönderir.
+  - **True** → `Planı Oku` (Notion, `getMarkdown`) → `Haftalık Değerlendirme` (AI Agent + Gemini + Structured Output Parser): planlanan programla gerçekleşeni karşılaştırır, 0-100 arası bir **uyum yüzdesi**, 2-3 somut öneri ve gelecek hafta için hacim/yoğunluk ayarlama önerisi üretir → `Haftalık Rapor Gönder` (Telegram) → `Haftalık Özet Kaydet` (Sheets, log — girdi/çıktı denetlenebilirlik için saklanıyor).
+
+Bu akış, "İleri seviye" hedeflerinden **çoklu girdi/zaman içi karşılaştırma**, **geçmiş kayıtlarla trend analizi** ve **otomatik takip ve öğrenme döngüsü** kriterlerini karşılıyor: sistem haftalık olarak kendiliğinden tetikleniyor, geçmiş antrenman kayıtlarını planla karşılaştırıyor ve bir sonraki haftanın planına somut bir ayarlama öneriyor.
+
 ## 8. Model Deployment
 
 GRU modeli **AWS Lambda** üzerinde, Docker (ECR) image olarak sunuluyor (`Dockerfile`, `8_gru_deploy.py`):
@@ -244,6 +255,7 @@ docker build -t runsight-gru .
 - GRU modeli, kişisel eşik bilgisine erişimi olmadan, sadece ham sinyalden bu etiketi yüksek sadakatle yeniden üretmeyi öğreniyor — bu da üründe tek-antrenmanlık, geçmişsiz (soğuk başlangıç) tahmini mümkün kılıyor.
 - **Bilinen kısıt — çoklu kullanıcı (multi-tenant):** Strava webhook'u uygulama seviyesinde (client_id) tüm kullanıcılar için tetikleniyor, ama API çağrıları şu an geliştiricinin tek bir OAuth2 kimlik bilgisine bağlı. Üretime taşımak için kullanıcı başına OAuth token saklama/yenileme (per-athlete token store) eklenmesi gerekiyor — bilinçli olarak bu iterasyonun kapsamı dışında bırakıldı.
 - **Bilinen kısıt — in-memory vektör store:** RAG için kullanılan `vectorStoreInMemory`, n8n instance'ı yeniden başladığında sıfırlanıyor; kalıcı bir vektör veritabanına (örn. Pinecone/Qdrant) geçiş üretim için önerilir.
+- **Bilinen kısıt — kişisel HR eşiği otomatik kalibrasyonu henüz yok:** Lambda API'sinin döndürdüğü `hr_p10`/`hr_p95` alanları, gelecekte kullanıcının `personal_hr_ceiling`/`personal_hr_floor` değerlerinin geçmiş antrenmanlar üzerinden otomatik yeniden hesaplanması için tasarlandı, ama bu adım haftalık öğrenme döngüsüne henüz entegre edilmedi — şu an döngü sadece plan-uyum karşılaştırması ve öneri üretiyor, eşik değerlerini güncellemiyor.
 
 ## 11. Proje Yapısı
 
