@@ -1,0 +1,4597 @@
+{
+  "name": "RunSight - Haftalık Takip ve Öğrenme Döngüsü",
+  "nodes": [
+    {
+      "parameters": {
+        "object": "activity",
+        "event": "create",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.stravaTrigger",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        208
+      ],
+      "id": "a300693b-5cf9-4dad-8928-efb9249899d8",
+      "name": "Strava Trigger",
+      "webhookId": "b97fd85a-c9fe-42b8-928c-7419ca8382e5",
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "ENQ3wkMUOZmEYM20",
+          "name": "Strava account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Ben {{ $('Get row(s) in sheet1').item.json.user }} yasim {{ $('Get row(s) in sheet1').item.json.age }}. Hedefim {{ $('Get row(s) in sheet1').item.json.goal }}. Iste bugünkü {{ $('Strava Trigger').item.json.object_data.start_date }} tarihli {{ $('Strava Trigger').item.json.object_data.type }} antrenmanim.\n\nAntrenman ozeti: {{ $('Strava Trigger').item.json.object_data.moving_time }} saniye surede {{ $('Strava Trigger').item.json.object_data.distance }} metre kat ettim. Maksimum hizim {{ Math.round($('Strava Trigger').item.json.object_data.max_speed * 3.6 * 10) / 10 }} km/h, ortalama hizim {{ Math.round($('Strava Trigger').item.json.object_data.average_speed * 3.6 * 10) / 10 }} km/h, ortalama nabzim {{ $('Strava Trigger').item.json.object_data.average_heartrate }} bpm, maksimum nabzim {{ $('Strava Trigger').item.json.object_data.max_heartrate }} bpm.\n\nGRU model siniflandirmasi (bu antrenman icin KESIN ve otoriter kabul et): egzersiz zonu = {{ $('GRU\\'ya antrenmani gönder').item.json.training_zone }}, anaerobik olasiligi = {{ $('GRU\\'ya antrenmani gönder').item.json.anaerobic_probability }}, guven skoru = {{ $('GRU\\'ya antrenmani gönder').item.json.confidence }}, bu antrenmanin nabiz 10. yuzdeligi = {{ $('GRU\\'ya antrenmani gönder').item.json.hr_p10 }} bpm, 95. yuzdeligi = {{ $('GRU\\'ya antrenmani gönder').item.json.hr_p95 }} bpm.\n\nKullanicinin nabiz zonlari (Karvonen); zone 2: {{ $('Get row(s) in sheet1').item.json.zone2 }}, zone 3: {{ $('Get row(s) in sheet1').item.json.zone3 }}, zone 4: {{ $('Get row(s) in sheet1').item.json.zone4 }}, zone 5: {{ $('Get row(s) in sheet1').item.json.zone5 }}, resting hr: {{ $('Get row(s) in sheet1').item.json.resting_hr }} bpm\n\nBu antrenman planın Hafta {{ $('antrenman günlerini hesapla').item.json.plan_hafta_no }}, {{ $('antrenman günlerini hesapla').item.json.plan_gun_adi }} günü için değerlendirilmeli.",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "={{ $json.data }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1920,
+        112
+      ],
+      "id": "b613e953-fa9f-4e82-969c-72c6ab278b2a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "sporcunun tüm antrenman gecmisini buradan cekebilirsin.",
+        "documentId": {
+          "__rl": true,
+          "value": "1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk",
+          "mode": "list",
+          "cachedResultName": "trainings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "athlete_id",
+              "lookupValue": "={{ $('Strava Trigger').item.json.owner_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1952,
+        352
+      ],
+      "id": "c17dcdd4-3f23-4e52-9cbf-9932fb0f2015",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -1104,
+        -1120
+      ],
+      "id": "364899bf-54a4-4d86-a80f-ed19943887b4",
+      "name": "Telegram Trigger",
+      "webhookId": "7c8bb9aa-d9a6-42ea-9a19-c2e4fcfcaeed",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "chat_id",
+              "lookupValue": "={{ $json.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -880,
+        -1120
+      ],
+      "id": "2bd31dc4-697e-4f9c-ac9d-700830d90315",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ben,{{ $('Telegram Trigger').item.json.message.from.first_name }}. Benim hedefim {{ $('Formu gönder ve yanit bekle').item.json.data['Enter your Goal'] }}, bana bu hedefe uygun antrenman plani cikar. Nabiz zonlari; zone 1:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone1 }}, zone 1:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone1 }}, zone 2:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone2 }}, zone 3:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone3 }}, zone 4:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone4 }}, zone 5:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone5 }}, Resting HR:{{ $('Formu gönder ve yanit bekle').item.json.data['Resting HR'] }}, Yas:{{ $('Formu gönder ve yanit bekle').item.json.data.Age }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "={{ $json.data }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2304,
+        -1392
+      ],
+      "id": "cc818b3f-4b1d-4b1a-aa53-f5101447917d",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "athlete_id",
+              "lookupValue": "={{ $('Strava Trigger').item.json.object_data.athlete.id_str }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        336,
+        112
+      ],
+      "id": "5b231a56-9758-40b9-bc77-2e8c8cbb2cc5",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2272,
+        -1168
+      ],
+      "id": "84fde996-4f62-48e6-985c-11cb1aae1ac8",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"plan_ozeti\": \"8 haftalık 10K hazırlık planı, base fazından başlıyor\",\n  \"toplam_hafta\": 8,\n  \"haftalik_plan\": [\n    {\n      \"hafta\": 1,\n      \"faz\": \"base\",\n      \"haftalik_hedef_km\": 20,\n      \"antrenmanlar\": [\n        { \"gun\": \"Pazartesi\", \"tur\": \"easy\", \"sure_dk\": 30, \"hedef_zone\": \"Zone 2\", \"aciklama\": \"Rahat tempo, konuşabilecek kadar\" }\n      ]\n    }\n  ],\n  \"riskler\": [\"Ani hacim artışı\"],\n  \"belirsizlik\": \"orta\",\n  \"kaynaklar\": [\"Friel - Training Bible\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2528,
+        -1168
+      ],
+      "id": "3173b12b-1d34-42e7-ab8e-6c5c8d9ea288",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2608,
+        -960
+      ],
+      "id": "5cbf074c-4533-4269-bf96-9220a609246a",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Antrenman planini buradan cekebilirsin. Bu sana tüm antrenman planini .md dosyasi olarak verecek.",
+        "operation": "getMarkdown",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get row(s) in sheet1').item.json.link }}",
+          "mode": "url"
+        }
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 3,
+      "position": [
+        2080,
+        352
+      ],
+      "id": "6e1a4d4d-ba19-4d6e-a1b5-884fad21a2b6",
+      "name": "Get page markdown in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "g87dLUmzfR3sGRhZ",
+          "name": "Notion account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-terra",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-terra"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        -1168
+      ],
+      "id": "5ae6b261-6d83-40d7-8fbc-8c0228e76013",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "=athlete_id: {{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.athlete_id }},\nchat_id: {{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.chat_id }},\nuser_name:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.user_name }},\nuser:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.user }},\nresting_hr:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.resting_hr }},\nage:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.age }}.\ngoal:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.goal }}\nzones: (zone 1:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone1 }},zone 2:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone2 }},zone 3:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone3 }},zone 4:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone4 }},zone 5:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.zone5 }}),\nlink:{{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.link }},\n\nAgent Output:\n\n{{ $('AI Agent1').item.json.output.plan_ozeti }},\n\nRisks:\n\n{{ $('AI Agent1').item.json.output.riskler }},\n\n{{ $('AI Agent1').item.json.output.belirsizlik }},\n\nResources:\n\n{{ $('AI Agent1').item.json.output.kaynaklar }}\n\nTraining Plan: \n\n{{ $json.markdown }}\n\n\n",
+        "name": "={{ $('Telegram Trigger').item.json.message.from.username }}_onboarding",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1F0kXbYrUDFjQ02vHJupK1PSTw7ZRYekU",
+          "mode": "list",
+          "cachedResultName": "ai_coach",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1F0kXbYrUDFjQ02vHJupK1PSTw7ZRYekU"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3776,
+        -1392
+      ],
+      "id": "5dfe79b4-44e9-40ef-bbb5-78c2831e6cef",
+      "name": "Create file from text1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mTwatzfELsTxE468",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Onboarding\n",
+        "height": 1040,
+        "width": 5888
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1200,
+        -1632
+      ],
+      "typeVersion": 1,
+      "id": "6fbe6e65-00c2-40e0-8615-8db529edfd62",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Human in the loop",
+        "height": 272,
+        "width": 224,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3264,
+        -1504
+      ],
+      "typeVersion": 1,
+      "id": "ee4c76f9-5f21-4843-8c1f-811c0849d3cb",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "log outputs",
+        "height": 288,
+        "width": 256,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3696,
+        -1520
+      ],
+      "typeVersion": 1,
+      "id": "e8aa108f-3d4c-461d-803b-2eeb4544ed8b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Post Workout",
+        "height": 1072,
+        "width": 3880,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -704,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "00bacaf4-c779-463f-b571-d42102017585",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "Bu bir Kosu antrenmani degil. ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        304
+      ],
+      "id": "4e1f3977-b15f-495a-8c50-d2adf2fce71f",
+      "name": "Send a text message2",
+      "webhookId": "d8508d78-d83e-472a-bb32-a6dd0225f9ef",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "athlete_id",
+              "lookupValue": "={{ $('Strava Trigger').item.json.object_data.athlete.id_str }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        304
+      ],
+      "id": "6dd70748-3455-478f-9782-3d16e2425549",
+      "name": "Get row(s) in sheet3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "log outputs",
+        "height": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2784,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "96bcb383-2e42-4ca4-9a91-469fae1f50a6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"output\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"summary\": { \"type\": \"string\", \"description\": \"Antrenmanın 1-2 cümlelik kısa özeti\" },\n        \"details\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"gru_assessment\": { \"type\": \"string\", \"description\": \"GRU'nun sınıflandırmasının (aerobik/anaerobik, confidence) yorumu\" },\n            \"plan_comparison\": { \"type\": \"string\", \"description\": \"Planlanan yoğunluk ile gerçekleşen yoğunluğun karşılaştırması\" },\n            \"load_and_recovery\": { \"type\": \"string\", \"description\": \"Antrenman yükü ve toparlanma değerlendirmesi\" },\n            \"data_quality\": { \"type\": \"string\", \"description\": \"Veri kalitesiyle ilgili gözlemler\" },\n            \"heart_rate_drift\": { \"type\": \"string\", \"description\": \"Nabız driftinin (aerobic decoupling) değerlendirmesi\" }\n          },\n          \"required\": [\"gru_assessment\", \"plan_comparison\", \"load_and_recovery\", \"data_quality\", \"heart_rate_drift\"]\n        },\n        \"action_items\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" },\n          \"minItems\": 3,\n          \"maxItems\": 3,\n          \"description\": \"Tam olarak 3 somut aksiyon maddesi\"\n        },\n        \"uncertainties\": { \"type\": \"string\", \"description\": \"Emin olunamayan noktalar / varsayımlar\" },\n        \"sources_used\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } }\n      },\n      \"required\": [\"summary\", \"details\", \"action_items\", \"uncertainties\", \"sources_used\"]\n    }\n  },\n  \"required\": [\"output\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2496,
+        352
+      ],
+      "id": "2f5ace00-7193-4c86-b5c8-a72db6b35694",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-terra",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-terra"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1696,
+        352
+      ],
+      "id": "0ac018dc-10d3-4170-a905-66cd4c78396b",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2288,
+        560
+      ],
+      "id": "a5479c2d-8c16-482c-ba85-29aee8ec2b12",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        736
+      ],
+      "id": "804544e6-a32d-4918-90b4-34810c555b25",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "embeddingBatchSize": 400
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        512
+      ],
+      "id": "b613a0ab-43e8-47bf-8ac5-82a9bcac8532",
+      "name": "Insert Data to Store"
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your data to test RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".md",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -688,
+        512
+      ],
+      "id": "729b2c12-f6b3-4f76-a7d9-e9144aae014c",
+      "name": "Upload your file here",
+      "webhookId": "13c00379-514c-4647-8787-a17a79be09e0"
+    },
+    {
+      "parameters": {
+        "content": "### 📚 Load Data Flow",
+        "height": 460,
+        "width": 700,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -704,
+        416
+      ],
+      "typeVersion": 1,
+      "id": "6a0d9191-bcae-4c63-823e-a9edeea6f4af",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledge_base",
+        "toolDescription": "Use this knowledge base to answer questions from the user",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        2208,
+        352
+      ],
+      "id": "8e2112b3-91c9-463c-a200-95fc558d8379",
+      "name": "Query Data Tool"
+    },
+    {
+      "parameters": {
+        "model": "qwen3.7-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAlibabaCloud",
+      "typeVersion": 1.1,
+      "position": [
+        2576,
+        560
+      ],
+      "id": "99b4226c-b57b-4658-b385-9f3db30bd478",
+      "name": "Qwen Cloud Chat Model",
+      "credentials": {
+        "alibabaCloudApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        -1040
+      ],
+      "id": "14bddeae-1f11-456a-9a23-f6f2c329a72b",
+      "name": "Wait",
+      "webhookId": "12a794c6-c496-46d5-b2ee-3625a5b0a62c"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * 0"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        1712
+      ],
+      "id": "c93a8413-a49f-4e1b-b376-41438fa11daf",
+      "name": "Haftalık Tetikleyici"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        1712
+      ],
+      "id": "7a543fff-13fc-4213-a86a-f752b86646c6",
+      "name": "Tüm Kullanıcılar",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.training_plan }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        1712
+      ],
+      "id": "c30a73e6-3541-4d41-ab77-d6abddf65155",
+      "name": "Aktif Planı Olanlar"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        176,
+        1712
+      ],
+      "id": "2fb63bff-fb31-4b49-bd5e-cdd0f6ee2d7a",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk",
+          "mode": "list",
+          "cachedResultName": "trainings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "chat_id",
+              "lookupValue": "={{ $json.chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        1600
+      ],
+      "id": "461b2933-0f2a-4750-9a73-5faed0dd81d0",
+      "name": "Haftalık Antrenmanlar",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const user = $('Loop Over Items').item.json;\nconst allTrainings = $input.all().map(i => i.json);\n\nconst now = new Date();\nconst weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\n\nconst weekTrainings = allTrainings.filter(t => t.date && new Date(t.date) >= weekAgo);\n\nconst totalKm = weekTrainings.reduce((sum, t) => sum + (Number(t.distance) || 0), 0) / 1000;\nconst sessionCount = weekTrainings.length;\n\nconst zoneDagilimi = {};\nfor (const t of weekTrainings) {\n  const z = t.effect || 'bilinmiyor';\n  zoneDagilimi[z] = (zoneDagilimi[z] || 0) + 1;\n}\n\nreturn [{ json: {\n  chat_id: user.chat_id,\n  user_name: user.user,\n  goal: user.goal,\n  notion_link: user.link,\n  toplam_km: Math.round(totalKm * 10) / 10,\n  antrenman_sayisi: sessionCount,\n  zone_dagilimi: zoneDagilimi,\n  antrenmanlar: weekTrainings.map(t => ({\n    tarih: t.date,\n    tur: t.training,\n    mesafe_km: Math.round((Number(t.distance) || 0) / 1000 * 10) / 10,\n    zone: t.effect\n  }))\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        1600
+      ],
+      "id": "cfa36724-dff7-406f-9c85-e3d2ef659080",
+      "name": "Haftalık Özet Hesapla"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.antrenman_sayisi }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        864,
+        1600
+      ],
+      "id": "6af1a480-b41f-4450-896b-57df23726672",
+      "name": "Antrenman Var mı?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Haftalık Özet Hesapla').item.json.chat_id }}",
+        "text": "=Bu hafta hiç koşu kaydın görünmüyor 👀 Plana devam edelim mi? Hedefin: {{ $('Haftalık Özet Hesapla').item.json.goal }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        1792
+      ],
+      "id": "c9ef75ce-4b4a-459d-8ef6-973c1b3c9af0",
+      "name": "Motivasyon Mesajı",
+      "webhookId": "d01ec59b-124c-47ff-97e9-547d76af9946",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getMarkdown",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.notion_link }}",
+          "mode": "url"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        1472
+      ],
+      "id": "e51fb859-9c7d-49d3-baa5-963dad9e557f",
+      "name": "Planı Oku",
+      "credentials": {
+        "notionApi": {
+          "id": "g87dLUmzfR3sGRhZ",
+          "name": "Notion account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Kullanıcı: {{ $('Haftalık Özet Hesapla').item.json.user_name }}, Hedef: {{ $('Haftalık Özet Hesapla').item.json.goal }}\n\nPlanlanan antrenman programı (Notion'dan):\n{{ $json.markdown }}\n\nBu hafta gerçekleşen:\n- Toplam mesafe: {{ $('Haftalık Özet Hesapla').item.json.toplam_km }} km\n- Antrenman sayısı: {{ $('Haftalık Özet Hesapla').item.json.antrenman_sayisi }}\n- Zone dağılımı: {{ JSON.stringify($('Haftalık Özet Hesapla').item.json.zone_dagilimi) }}\n- Detaylar: {{ JSON.stringify($('Haftalık Özet Hesapla').item.json.antrenmanlar) }}\n\nGörev: Planlanan ile gerçekleşeni karşılaştır, 0-100 arası bir uyum yüzdesi ver, 2-3 somut öneri sun, ve gelecek hafta için plan üzerinde küçük bir ayarlama öner (hacim/yoğunluk artır-azalt).",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1344,
+        1472
+      ],
+      "id": "316a158b-59dc-44a7-a9b9-66e1c857f973",
+      "name": "Haftalık Değerlendirme"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.8-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1296,
+        1680
+      ],
+      "id": "3ebde4fc-8501-4f1f-8487-ae8be785ef1c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"uyum_yuzdesi\": 78,\n  \"degerlendirme\": \"Planlanan 30 km'ye karşılık 24 km koştun, hafif düşük ama tempo koşuların hedef zone'da.\",\n  \"oneriler\": [\"Uzun koşuyu 2 km artır\", \"Bir gün daha Zone 2 koşusu ekle\"],\n  \"sonraki_hafta_ayarlamasi\": \"Hacmi %5 artır, yoğunluğu aynı tut\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1472,
+        1680
+      ],
+      "id": "0953a623-af54-46ba-85c2-97c3bd936ce8",
+      "name": "Yapılandırılmış Çıktı"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Haftalık Özet Hesapla').item.json.chat_id }}",
+        "text": "=📊 Haftalık Rapor - {{ $('Haftalık Özet Hesapla').item.json.user_name }}\n\nBu hafta: {{ $('Haftalık Özet Hesapla').item.json.toplam_km }} km, {{ $('Haftalık Özet Hesapla').item.json.antrenman_sayisi }} antrenman\nUyum: %{{ $json.output.uyum_yuzdesi }}\n\n{{ $json.output.degerlendirme }}\n\nÖneriler:\n- {{ $json.output.oneriler.join('\\n- ') }}\n\nGelecek hafta: {{ $json.output.sonraki_hafta_ayarlamasi }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1712,
+        1472
+      ],
+      "id": "f32b0c13-4e05-4b20-aec2-61beb9d8ec57",
+      "name": "Haftalık Rapor Gönder",
+      "webhookId": "fcb561b3-8628-4647-bb87-e2e312fa4e24",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13023R7iYnLLPg_E9cs-NeCd0f_aLccKH8rOJ6AktlUo",
+          "mode": "list",
+          "cachedResultName": "logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13023R7iYnLLPg_E9cs-NeCd0f_aLccKH8rOJ6AktlUo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13023R7iYnLLPg_E9cs-NeCd0f_aLccKH8rOJ6AktlUo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "input": "={{ $('Planı Oku').item.json.markdown }}",
+            "output": "={{ $('Haftalık Değerlendirme').item.json.output.uyum_yuzdesi }},{{ $('Haftalık Değerlendirme').item.json.output.degerlendirme }},{{ $('Haftalık Değerlendirme').item.json.output.oneriler }}",
+            "chat_id": "={{ $json.result.chat.id }}",
+            "user_name": "={{ $json.result.chat.username }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner_id",
+              "displayName": "owner_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1952,
+        1472
+      ],
+      "id": "c36f3fee-79eb-4d97-a8a6-220ddab30436",
+      "name": "Haftalık Özet Kaydet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        1888
+      ],
+      "id": "064e6e3d-512f-49e3-a4e9-14b69714926e",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.8-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1824,
+        368
+      ],
+      "id": "0100a9d2-0eeb-42a8-b189-43ea0a6e500c",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cea41318-5227-480a-8dc6-266708283dff",
+              "leftValue": "={{ $json.user_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "84c553e9-c609-4535-92d8-26a66d03c1d1",
+              "leftValue": "={{ $json.resting_hr }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "35e708a7-83eb-4f33-a659-6833d9968a04",
+              "leftValue": "={{ $json.age }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "2de5b8a6-f074-40c2-9c96-e31fcd35cbc9",
+              "leftValue": "={{ $json.goal }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -656,
+        -1120
+      ],
+      "id": "40bfb72d-59c5-4d0f-b20e-af810d63dd6b",
+      "name": "Age,Resting HR hedef var mi?"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "message": "Check this form!",
+        "responseType": "customForm",
+        "defineForm": "json",
+        "jsonOutput": "[\n  {\n    \"fieldLabel\": \"Name\",\n    \"placeholder\": \"enter your name\",\n    \"requiredField\": true\n  },\n  {\n    \"fieldLabel\": \"Age\",\n    \"fieldType\": \"number\",\n    \"placeholder\": \"enter your age\"\n  },\n    {\n    \"fieldLabel\": \"Resting HR\",\n    \"fieldType\": \"number\",\n    \"placeholder\": \"enter your Resting HR\"\n  },\n  {\n    \"fieldLabel\": \"Enter your Goal\",\n    \"fieldType\": \"textarea\"\n  },\n    {\n    \"fieldLabel\": \"Enter the Strava link for any workout\",\n    \"fieldType\": \"textarea\",\n    \"requiredField\": true\n  }\n]\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -432,
+        -1040
+      ],
+      "id": "8c95ea54-4e98-495c-b9c7-facf780df836",
+      "name": "Formu gönder ve yanit bekle",
+      "webhookId": "17f1f81e-bd1b-48c5-b459-381c532e3ba4",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data['Enter the Strava link for any workout'] }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "stravaOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -208,
+        -1040
+      ],
+      "id": "0fd75840-145a-494e-ab82-f6de4525a326",
+      "name": "Gelen strava linkinden sayfayi cek",
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "ENQ3wkMUOZmEYM20",
+          "name": "Strava account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.data || $input.first().json.body || JSON.stringify($input.first().json);\nconst match = body.match(/strava\\.com\\/activities\\/(\\d+)/);\n\nif (!match) {\n  throw new Error('HTML içinde Strava aktivite ID bulunamadı');\n}\n\nreturn [{ json: { activity_id: match[1] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -1040
+      ],
+      "id": "7d18fe3f-da9e-4d43-8020-d2ca55547845",
+      "name": "Sayfadan activity_id'yi bul"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.strava.com/api/v3/activities/{{ $json.activity_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "stravaOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        -1040
+      ],
+      "id": "05f25859-8a95-4247-a82f-ca8e21e3c014",
+      "name": "Activity_id'den api ile cek",
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "ENQ3wkMUOZmEYM20",
+          "name": "Strava account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_name": "={{ $('Telegram Trigger').item.json.message.chat.username }}",
+            "resting_hr": "={{ $('Formu gönder ve yanit bekle').item.json.data['Resting HR'] }}",
+            "age": "={{ $('Formu gönder ve yanit bekle').item.json.data.Age }}",
+            "goal": "={{ $('Formu gönder ve yanit bekle').item.json.data['Enter your Goal'] }}",
+            "chat_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "athlete_id": "={{ $json.athlete.id_str }}",
+            "user": "={{ $('Formu gönder ve yanit bekle').item.json.data.Name }}",
+            "training_plan": "false",
+            "plan_start_date": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "athlete_id",
+              "displayName": "athlete_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user",
+              "displayName": "user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resting_hr",
+              "displayName": "resting_hr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "goal",
+              "displayName": "goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "strava_connected",
+              "displayName": "strava_connected",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone1",
+              "displayName": "zone1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone2",
+              "displayName": "zone2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone3",
+              "displayName": "zone3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone4",
+              "displayName": "zone4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone5",
+              "displayName": "zone5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training_plan",
+              "displayName": "training_plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "plan_start_date",
+              "displayName": "plan_start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        464,
+        -1040
+      ],
+      "id": "18805789-67d9-48a3-a659-4aa58425fb35",
+      "name": "athlete_id'yi al ve kaydet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0fad668-61a4-4834-8038-008621c0e75a",
+              "leftValue": "={{ $json.zone1 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1bbe7930-3e13-4882-8d71-628573a273ad",
+              "leftValue": "={{ $json.zone2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5e48b374-2dc0-4503-9a82-b7b2906e3547",
+              "leftValue": "={{ $json.zone3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "25c1387b-6495-4dff-815c-9e01905395b1",
+              "leftValue": "={{ $json.zone4 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "94eb8ac5-7ccd-44ef-9441-a85c85ca4463",
+              "leftValue": "={{ $json.zone5 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        -1120
+      ],
+      "id": "1e5d9b33-d576-4fbd-929c-c9149bbca33f",
+      "name": "antrenman zonlari kayitli mi?"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "athlete_age =_items[0][\"json\"][\"age\"]\nresting_hr =_items[0][\"json\"][\"resting_hr\"]\n\nmax_hr = 220 - athlete_age\nhr_reserve = max_hr - resting_hr\n\nzone1_low = int((hr_reserve * 0.50) + resting_hr)\nzone1_high = int((hr_reserve * 0.60) + resting_hr)\nzone2_low = zone1_high + 1\nzone2_high = int((hr_reserve * 0.70) + resting_hr)\nzone3_low = zone2_high + 1\nzone3_high = int((hr_reserve * 0.80) + resting_hr)\nzone4_low = zone3_high + 1\nzone4_high = int((hr_reserve * 0.90) + resting_hr)\nzone5_low = zone4_high + 1\nzone5_high = max_hr\nzones = {'zone1_low':zone1_low,\n         \"zone1_high\":zone1_high,\n         'zone2_low':zone2_low,\n         \"zone2_high\":zone2_high,\n         'zone3_low':zone3_low, \n         \"zone3_high\":zone3_high, \n         'zone4_low':zone4_low, \n         \"zone4_high\":zone4_high,\n         'zone5_low':zone5_low, \n         \"zone5_high\":zone5_high}\n\nreturn zones"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        -1184
+      ],
+      "id": "cbfc8d3f-3a67-46c9-a5a7-47000a1af2a8",
+      "name": "karvonen formülü ile zonlari hesapla"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "zone1": "={{ $json.zone1_low }}/{{ $json.zone1_high }}",
+            "zone2": "={{ $json.zone2_low }}/{{ $json.zone2_high }}",
+            "zone3": "={{ $json.zone3_low }}/{{ $json.zone3_high }}",
+            "zone4": "={{ $json.zone4_low }}/{{ $json.zone4_high }}",
+            "zone5": "={{ $json.zone5_low }}/{{ $json.zone5_high }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "athlete_id",
+              "displayName": "athlete_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user",
+              "displayName": "user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resting_hr",
+              "displayName": "resting_hr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "goal",
+              "displayName": "goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "strava_connected",
+              "displayName": "strava_connected",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone1",
+              "displayName": "zone1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone2",
+              "displayName": "zone2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone3",
+              "displayName": "zone3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone4",
+              "displayName": "zone4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone5",
+              "displayName": "zone5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training_plan",
+              "displayName": "training_plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        -1184
+      ],
+      "id": "c6f867a3-affc-45f5-b660-9dc3fe6f51b8",
+      "name": "bunlari user sheet'ine kaydet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "chat_id",
+              "lookupValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1584,
+        -1120
+      ],
+      "id": "d055d4f9-533e-4239-aad9-2d373940d006",
+      "name": "user sheet'inde ilgili kullaniciyi cek",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1b2f1ff8-e8d0-413b-abb7-35a43a221244",
+              "leftValue": "={{ $json.training_plan }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        -1120
+      ],
+      "id": "f1a25620-7529-4dc7-8d49-984c82a656ce",
+      "name": "Antrenman plani mevcut mu?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Plan zaten mevcut! {{ $('user sheet\\'inde ilgili kullaniciyi cek').item.json.link }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2032,
+        -1024
+      ],
+      "id": "54ab3044-48bd-40d5-ba39-00f4eac41c16",
+      "name": "Antrenman plani varsa kullaniciyi bilgilendir.",
+      "webhookId": "5070189e-2405-4361-aa1c-b3d987f132ba",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/vyscnktn/zero-to-ai-architect/main/runsight/onboarding_prompt.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2032,
+        -1216
+      ],
+      "id": "3e4c121d-4e6b-445d-b085-bfec8c13f643",
+      "name": "sistem promptunu cek"
+    },
+    {
+      "parameters": {
+        "jsCode": "const plan = $('AI Agent1').first().json.output;\nconst userInfo = $('Get row(s) in sheet').first().json;\nconst zoneInfo = $('user sheet\\'inde ilgili kullaniciyi cek').first().json;\nconst telegramUser = $('Telegram Trigger').first().json;\n\nconst firstName = telegramUser.message.from.first_name || telegramUser.message.chat.first_name || \"Kullanıcı\";\nconst dynamicTitle = `${firstName} — ${plan.toplam_hafta} Haftalık Antrenman Planı`;\n\nconst zoneLabels = {\n  zone1: \"Zone 1 — Toparlanma\",\n  zone2: \"Zone 2 — Aerobik / Kolay Koşu\",\n  zone3: \"Zone 3 — Tempo\",\n  zone4: \"Zone 4 — Eşik (Threshold)\",\n  zone5: \"Zone 5 — VO2 Max / Anaerobik\"\n};\n\nconst blocks = [];\n\nblocks.push({\n  object: \"block\", type: \"heading_1\",\n  heading_1: { rich_text: [{ text: { content: dynamicTitle } }] }\n});\nblocks.push({\n  object: \"block\", type: \"paragraph\",\n  paragraph: { rich_text: [{ text: { content: plan.plan_ozeti } }] }\n});\n\nblocks.push({\n  object: \"block\", type: \"heading_2\",\n  heading_2: { rich_text: [{ text: { content: \"Nabız Bölgeleri (Karvonen Formülü)\" } }] }\n});\nblocks.push({\n  object: \"block\", type: \"callout\",\n  callout: {\n    rich_text: [{ text: { content: `Dinlenik Nabız: ${userInfo.resting_hr ?? \"?\"} bpm` } }],\n    icon: { emoji: \"❤️\" }\n  }\n});\nfor (const [key, label] of Object.entries(zoneLabels)) {\n  const range = (zoneInfo[key] || \"\").toString().replace(\"/\", \"–\");\n  blocks.push({\n    object: \"block\", type: \"bulleted_list_item\",\n    bulleted_list_item: { rich_text: [{ text: {\n      content: `${label}: ${range} bpm`\n    } }] }\n  });\n}\n\nfor (let i = 0; i < plan.haftalik_plan.length; i++) {\n  const hafta = plan.haftalik_plan[i];\n  const nextHafta = plan.haftalik_plan[i + 1];\n  const startWeek = hafta.hafta;\n  const endWeek = nextHafta ? nextHafta.hafta - 1 : plan.toplam_hafta;\n  const weekLabel = startWeek === endWeek ? `Hafta ${startWeek}` : `Hafta ${startWeek}–${endWeek}`;\n\n  blocks.push({\n    object: \"block\", type: \"heading_2\",\n    heading_2: { rich_text: [{ text: { content: `${weekLabel} — ${hafta.faz} (${hafta.haftalik_hedef_km} km/hafta)` } }] }\n  });\n\n  if (startWeek !== endWeek) {\n    blocks.push({\n      object: \"block\", type: \"callout\",\n      callout: {\n        rich_text: [{ text: { content: `Bu antrenman şablonu ${weekLabel} boyunca tekrarlanır (hacim hafif artırılarak).` } }],\n        icon: { emoji: \"🔁\" }\n      }\n    });\n  }\n\n  for (const a of hafta.antrenmanlar) {\n    blocks.push({\n      object: \"block\", type: \"bulleted_list_item\",\n      bulleted_list_item: { rich_text: [{ text: {\n        content: `${a.gun} — ${a.tur} (${a.sure_dk} dk, ${a.hedef_zone}): ${a.aciklama}`\n      } }] }\n    });\n  }\n}\n\nblocks.push({\n  object: \"block\", type: \"heading_2\",\n  heading_2: { rich_text: [{ text: { content: \"Riskler\" } }] }\n});\nfor (const r of plan.riskler) {\n  blocks.push({\n    object: \"block\", type: \"bulleted_list_item\",\n    bulleted_list_item: { rich_text: [{ text: { content: r } }] }\n  });\n}\n\nblocks.push({\n  object: \"block\", type: \"callout\",\n  callout: {\n    rich_text: [{ text: { content: `Belirsizlik: ${plan.belirsizlik}` } }],\n    icon: { emoji: \"⚠️\" }\n  }\n});\n\nblocks.push({\n  object: \"block\", type: \"heading_2\",\n  heading_2: { rich_text: [{ text: { content: \"Kaynaklar\" } }] }\n});\nfor (const k of plan.kaynaklar) {\n  blocks.push({\n    object: \"block\", type: \"bulleted_list_item\",\n    bulleted_list_item: { rich_text: [{ text: { content: k } }] }\n  });\n}\n\nreturn [{ json: {\n  title: dynamicTitle,\n  blocks: blocks\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        -1392
+      ],
+      "id": "25c492bb-7dcb-408e-983b-20821598d39b",
+      "name": "notion sayfasinin olustur"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=     {\n       \"parent\": { \"page_id\": \"3e4426ff6d018050be8fd1962d697ae4\" },\n       \"properties\": {\n         \"title\": [{ \"text\": { \"content\": \"{{ $json.title }}\" } }]\n       },\n       \"children\": {{ JSON.stringify($json.blocks) }}\n     }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3104,
+        -1392
+      ],
+      "id": "afadeb90-dca4-467f-b905-fdcb2d95278e",
+      "name": "olusturulan sayfayi post et",
+      "credentials": {
+        "notionApi": {
+          "id": "g87dLUmzfR3sGRhZ",
+          "name": "Notion account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "cankt321@gmail.com",
+        "subject": "New Training Plan",
+        "message": "=Hi Coach,\n\nHere is new plan for {{ $('Telegram Trigger').item.json.message.chat.first_name }} {{ $('Telegram Trigger').item.json.message.from.last_name }}\n\nCheck this link below;\n{{ $json.url }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3328,
+        -1392
+      ],
+      "id": "a67d42c0-5ebf-4f90-a6cb-703db1de0eed",
+      "name": "Antrenöre plani sor onay al",
+      "webhookId": "afa35a01-8f69-4d44-bd87-7e2c1d1ada34",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hkc3GjOFDgue4Ds6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getMarkdown",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('olusturulan sayfayi post et').item.json.url }}",
+          "mode": "url"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3552,
+        -1392
+      ],
+      "id": "ccadb40c-7f17-4763-acd1-89f734ea14a1",
+      "name": "olusturulan sayfayi ce ve drive'a logla",
+      "credentials": {
+        "notionApi": {
+          "id": "g87dLUmzfR3sGRhZ",
+          "name": "Notion account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U",
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lFUEyXcBloC3vu2UhYIXujJGFZ3NJzDxUAWtzgkOz7U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "training_plan": "={{ $('Antrenöre plani sor onay al').item.json.data.approved }}",
+            "link": "={{ $('olusturulan sayfayi post et').item.json.url }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "athlete_id",
+              "displayName": "athlete_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user",
+              "displayName": "user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resting_hr",
+              "displayName": "resting_hr",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "age",
+              "displayName": "age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "goal",
+              "displayName": "goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "strava_connected",
+              "displayName": "strava_connected",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone1",
+              "displayName": "zone1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone2",
+              "displayName": "zone2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone3",
+              "displayName": "zone3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone4",
+              "displayName": "zone4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "zone5",
+              "displayName": "zone5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training_plan",
+              "displayName": "training_plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4000,
+        -1392
+      ],
+      "id": "42c84dcb-0e94-4abe-aa8a-afbf6515c4d4",
+      "name": "olusturulan plani kullanicinin satirlarina kaydet linkini ekle",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8972d4e0-01d3-42e5-8cb7-dd859d3f53e8",
+              "leftValue": "={{ $json.training_plan }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4224,
+        -1216
+      ],
+      "id": "c2e2c645-265c-4aaa-8eb4-22a4aa7f5990",
+      "name": "antrenör plani onayladi mi"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent1').item.json.output.plan_ozeti }} \nTüm plana asagidaki linkten ulasabilirsin;\n{{ $('olusturulan sayfayi post et').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4448,
+        -1216
+      ],
+      "id": "19ecbde9-94a5-4877-a5fd-026023f2adf4",
+      "name": "onaylanan plani kullaniciya gönder",
+      "webhookId": "d870a284-137a-4ce3-9c80-ae09aee6e077",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.strava.com/api/v3/activities/{{ $json.object_id }}/streams?keys=heartrate,altitude,latlng,{{ $json.object_data.type }},velocity_smooth&key_by_type=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "stravaOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "keys",
+              "value": "time,heartrate,velocity_smooth,altitude,latlng"
+            },
+            {
+              "name": "key_by_type",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "52d8e3a2-6701-4258-8827-9630ee516383",
+      "name": "activity_id'den api ile antrenmani cek",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        208
+      ],
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "ENQ3wkMUOZmEYM20",
+          "name": "Strava account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6f45561e-e1ee-40db-a43d-9b6470785599",
+              "leftValue": "={{ $('Strava Trigger').item.json.object_data.type }}",
+              "rightValue": "Run",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -112,
+        208
+      ],
+      "id": "f0bee6b5-784c-4578-b038-add1776443f8",
+      "name": "Kosu antrenmani mi?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://rtzto7h7actkjlcmx4gsumftfm0szusa.lambda-url.eu-central-1.on.aws/",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "cd6777af-95da-44b0-9f7c-d2231c89bea9",
+      "name": "GRU'ya antrenmani gönder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const activityDate = new Date($('Strava Trigger').item.json.object_data.start_date);\nconst planStart = new Date($('Get row(s) in sheet1').item.json.plan_start_date + 'T00:00:00Z');\n\nconst actUTC = Date.UTC(activityDate.getUTCFullYear(), activityDate.getUTCMonth(), activityDate.getUTCDate());\nconst planUTC = Date.UTC(planStart.getUTCFullYear(), planStart.getUTCMonth(), planStart.getUTCDate());\n\nconst gunFarki = Math.floor((actUTC - planUTC) / 86400000);\nconst haftaNo = Math.floor(gunFarki / 7) + 1;\nconst gunAdlari = ['Pazar','Pazartesi','Sali','Carsamba','Persembe','Cuma','Cumartesi'];\nconst gunAdi = gunAdlari[activityDate.getUTCDay()];\n\nreturn [{ json: { ...$json, plan_hafta_no: haftaNo, plan_gun_adi: gunAdi } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        112
+      ],
+      "id": "8e934700-35cd-4eb0-a51e-8d37dd68cf3d",
+      "name": "antrenman günlerini hesapla"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "75dc9851-dd06-455e-a0e8-0a43f05642a0",
+              "leftValue": "={{ $('GRU\\'ya antrenmani gönder').item.json.confidence }}",
+              "rightValue": 0.6,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        112
+      ],
+      "id": "a5ef32bc-62e8-453d-a7a7-9be374e38617",
+      "name": "confidence 0.6'dan büyük mü?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk",
+          "mode": "list",
+          "cachedResultName": "trainings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "effect": "={{ $('GRU\\'ya antrenmani gönder').item.json.training_zone }}",
+            "distance": "={{ $('Strava Trigger').item.json.object_data.distance }}",
+            "training": "={{ $('Strava Trigger').item.json.object_data.type }}",
+            "date": "={{ $('Strava Trigger').item.json.object_data.start_date }}",
+            "athlete_id": "={{ $json.athlete_id }}",
+            "chat_id": "={{ $json.chat_id }}",
+            "user_name": "={{ $json.user_name }}"
+          },
+          "matchingColumns": [
+            "owner_id"
+          ],
+          "schema": [
+            {
+              "id": "athlete_id",
+              "displayName": "athlete_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training",
+              "displayName": "training",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "effect",
+              "displayName": "effect",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "distance",
+              "displayName": "distance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1232,
+        16
+      ],
+      "id": "39300ff1-0d1a-473b-9cba-be634cb9a521",
+      "name": "training sheet'ine ilgili bilgileri kaydet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://raw.githubusercontent.com/vyscnktn/zero-to-ai-architect/main/runsight/post_workout_prompt.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1456,
+        112
+      ],
+      "id": "620f4d2e-7d34-412a-8936-28e6cbccde54",
+      "name": "sistem promptunu cek1"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Get row(s) in sheet1').item.json.chat_id }}",
+        "message": "==⚠️ Bu antrenmanı düşük güvenle (%{{ Math.round($('GRU\\'ya antrenmani gönder').item.json.confidence * 100) }}) {{ $('GRU\\'ya antrenmani gönder').item.json.training_zone }} olarak sınıflandırdım.\n\nEmin olamadığım için geçmişine otomatik eklemedim ve detaylı rapor oluşturmadım. İstersen antrenmanın türünü bana yazabilirsin.",
+        "responseType": "customForm",
+        "defineForm": "json",
+        "jsonOutput": "[\n  {\n    \"fieldLabel\": \"training_zone\",\n    \"fieldType\": \"radio\",\n    \"fieldOptions\": {\n      \"values\": [\n        {\n          \"option\": \"aerobik\"\n        },\n        {\n          \"option\": \"anaerobik\"\n        }\n      ]\n    }\n  },\n  {\n    \"fieldLabel\": \"confidence\",\n    \"fieldType\": \"hiddenField\",\n    \"fieldValue\": 0.99\n  }\n]\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        208
+      ],
+      "id": "b01f11af-5b8f-4108-a289-9c8f14b031c7",
+      "name": "kullanicidan antrenman türünü ögren",
+      "webhookId": "97ef0a2d-22a6-431b-a09e-462270ac3a5d",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk",
+          "mode": "list",
+          "cachedResultName": "trainings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P9JnJs54BbVy6EqZy0z99fXEiUdSTSz760U4MC1jeTk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "effect": "={{ $json.data.training_zone }}",
+            "distance": "={{ $('Strava Trigger').item.json.object_data.distance }}",
+            "training": "={{ $('Strava Trigger').item.json.object_data.type }}",
+            "date": "={{ $('Strava Trigger').item.json.object_data.start_date }}",
+            "athlete_id": "={{ $('Strava Trigger').item.json.object_data.athlete.id_str }}",
+            "chat_id": "={{ $('Get row(s) in sheet1').item.json.chat_id }}",
+            "user_name": "={{ $('Get row(s) in sheet1').item.json.user_name }}"
+          },
+          "matchingColumns": [
+            "owner_id"
+          ],
+          "schema": [
+            {
+              "id": "athlete_id",
+              "displayName": "athlete_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training",
+              "displayName": "training",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "effect",
+              "displayName": "effect",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "distance",
+              "displayName": "distance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1232,
+        208
+      ],
+      "id": "45d84504-0ef8-41bc-8bdd-54063dd27c62",
+      "name": "training sheet'ine bilgileri kaydet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Kw4UUC0O4atX9pi9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "=Özet\n\n{{ $json.output.summary }}\n\nPolarizasyon\n\n{{ $json.output.details.gru_assessment }}\n\nKiyaslama\n\n{{ $json.output.details.plan_comparison }}\n\nTraining Load ve Recovery\n\n{{ $json.output.details.load_and_recovery }}\n\nVeri Kalitesi\n\n{{ $json.output.details.data_quality }}\n\nKardiyak Kayma\n\n{{ $json.output.details.heart_rate_drift }}\n\n\nAksiyon Plani\n\n1.{{ $json.output.action_items[0] }}\n2.{{ $json.output.action_items[1] }}\n3.{{ $json.output.action_items[2] }}\n\nBelirsizlikler\n\n{{ $json.output.uncertainties }}\n\nKaynaklar\n\n{{ $json.output.sources_used[0] }}\n\n\n\n",
+        "name": "={{ $('Strava Trigger').item.json.object_data.athlete.id_str }}_{{ $('Strava Trigger').item.json.object_data.start_date }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1F0kXbYrUDFjQ02vHJupK1PSTw7ZRYekU",
+          "mode": "list",
+          "cachedResultName": "ai_coach",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1F0kXbYrUDFjQ02vHJupK1PSTw7ZRYekU"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2848,
+        112
+      ],
+      "id": "c96f6688-1783-40b6-b36a-bddb29b57e55",
+      "name": "drive'a ciktilari logla",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mTwatzfELsTxE468",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get row(s) in sheet1').item.json.chat_id }}",
+        "text": "=🏃 Antrenman Raporu\n\nÖzet\n\n{{ $('AI Agent').item.json.output.summary }}\n\nPolarizasyon\n\n{{ $('AI Agent').item.json.output.details.gru_assessment }}\n\nKiyaslama\n\n{{ $('AI Agent').item.json.output.details.plan_comparison }}\n\nTraining Load ve Recovery\n\n{{ $('AI Agent').item.json.output.details.load_and_recovery }}\n\nVeri Kalitesi\n\n{{ $('AI Agent').item.json.output.details.data_quality }}\n\nKardiyak Kayma\n\n{{ $('AI Agent').item.json.output.details.heart_rate_drift }}\n\nAksiyon Plani\n\n1.{{ $('AI Agent').item.json.output.action_items[0] }}\n2.{{ $('AI Agent').item.json.output.action_items[1] }}\n3.{{ $('AI Agent').item.json.output.action_items[2] }}\n\nBelirsizlikler\n\n{{ $('AI Agent').item.json.output.uncertainties }}\n\nKaynaklar\n\n{{ $('AI Agent').item.json.output.sources_used }}",
+        "additionalFields": {}
+      },
+      "id": "d64d3abd-6454-4e47-a6ef-0adae8e5d033",
+      "name": "raporu kullaniciya gönder",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3072,
+        112
+      ],
+      "webhookId": "e74be38c-b276-4b34-b65a-0bdc0ffaa9c4",
+      "credentials": {
+        "telegramApi": {
+          "id": "1gYdvpphR5qTp9Kq",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Strava Trigger": [
+      {
+        "json": {
+          "aspect_type": "create",
+          "event_time": 1790352551,
+          "object_id": 20325727656,
+          "object_type": "activity",
+          "owner_id": 145839979,
+          "subscription_id": 374051,
+          "updates": {},
+          "object_data": {
+            "resource_state": 3,
+            "athlete": {
+              "id": 145839979,
+              "id_str": "145839979",
+              "resource_state": 1
+            },
+            "name": "Afternoon Run",
+            "distance": 5151.4,
+            "moving_time": 1933,
+            "elapsed_time": 1966,
+            "total_elevation_gain": 31,
+            "type": "Run",
+            "sport_type": "Run",
+            "workout_type": null,
+            "device_name": "Garmin Instinct 2",
+            "id": 20325727656,
+            "id_str": "20325727656",
+            "start_date": "2026-09-25T15:07:20Z",
+            "start_date_local": "2026-09-25T17:07:20Z",
+            "timezone": "(GMT+01:00) Europe/Berlin",
+            "utc_offset": 7200,
+            "location_city": null,
+            "location_state": null,
+            "location_country": null,
+            "achievement_count": 0,
+            "kudos_count": 0,
+            "comment_count": 0,
+            "athlete_count": 1,
+            "photo_count": 0,
+            "map": {
+              "id": "a20325727656",
+              "polyline": "ikgnHu}or@V~AAPFHBPEb@DB@HJHAFDJQb@?TJxALhAHtAE~BGp@EPk@XQPw@b@cAh@qD|AiDdBiAb@K@KHc@Pu@\\c@JqCRc@N_@VQVuAhC[\\_@Vi@RyANi@Jg@ReHfDcDrA}BfAcA`@{@d@GGIODWEy@c@{HQ{DMmBS}EWcEG_B@KIkA?R`@rGr@nNj@rM?[e@_IuAuYfAhSJbD^dHHzB?FA??a@ScDIqB{@cQGmBWkEN~Bj@pLb@`IZtHAJBMg@iIQ{EaA}Rr@lMfAdVFPHBp@]",
+              "resource_state": 3,
+              "summary_polyline": "ikgnHu}or@V~AAPFHBPEb@DB@HJHAFDJQb@?TJxALhAHtAE~BGp@EPk@XQPw@b@cAh@qD|AiDdBiAb@K@KHc@Pu@\\c@JqCRc@N_@VQVuAhC[\\_@Vi@RyANi@Jg@ReHfDcDrA}BfAcA`@{@d@GGIODWEy@c@{HQ{DMmBS}EWcEG_B@KIkA?R`@rGr@nNj@rM?[e@_IuAuYfAhSJbD^dHHzB?FA??a@ScDIqB{@cQGmBWkEN~Bj@pLb@`IZtHAJBMg@iIQ{EaA}Rr@lMfAdVFPHBp@]"
+            },
+            "trainer": false,
+            "commute": false,
+            "manual": false,
+            "private": false,
+            "visibility": "everyone",
+            "flagged": false,
+            "gear_id": "g29920880",
+            "start_latlng": [
+              49.686452,
+              8.442677
+            ],
+            "end_latlng": [
+              49.696232,
+              8.433361
+            ],
+            "average_speed": 2.665,
+            "max_speed": 4.2,
+            "average_cadence": 81.1,
+            "average_watts": 318.8,
+            "max_watts": 527,
+            "weighted_average_watts": 338,
+            "device_watts": true,
+            "kilojoules": 616.5,
+            "has_heartrate": true,
+            "average_heartrate": 139.4,
+            "max_heartrate": 170,
+            "heartrate_opt_out": false,
+            "display_hide_heartrate_option": true,
+            "elev_high": 104.6,
+            "elev_low": 87.6,
+            "upload_id": 21479972766,
+            "upload_id_str": "21479972766",
+            "external_id": "garmin_ping_633873331861",
+            "from_accepted_tag": false,
+            "pr_count": 0,
+            "total_photo_count": 0,
+            "has_kudoed": false,
+            "suffer_score": 22,
+            "description": null,
+            "calories": 421,
+            "perceived_exertion": null,
+            "prefer_perceived_exertion": null,
+            "segment_efforts": [],
+            "splits_metric": [
+              {
+                "distance": 1002.4,
+                "elapsed_time": 456,
+                "elevation_difference": -15,
+                "moving_time": 456,
+                "split": 1,
+                "average_speed": 2.2,
+                "average_grade_adjusted_speed": 2.22,
+                "average_heartrate": 114.70833333333333,
+                "pace_zone": 1
+              },
+              {
+                "distance": 998.9,
+                "elapsed_time": 412,
+                "elevation_difference": 7.4,
+                "moving_time": 403,
+                "split": 2,
+                "average_speed": 2.48,
+                "average_grade_adjusted_speed": 2.56,
+                "average_heartrate": 125.55112219451371,
+                "pace_zone": 2
+              },
+              {
+                "distance": 1000.1,
+                "elapsed_time": 329,
+                "elevation_difference": -0.4,
+                "moving_time": 326,
+                "split": 3,
+                "average_speed": 3.07,
+                "average_grade_adjusted_speed": 3.09,
+                "average_heartrate": 152.53869969040247,
+                "pace_zone": 4
+              },
+              {
+                "distance": 999.6,
+                "elapsed_time": 346,
+                "elevation_difference": -3,
+                "moving_time": 336,
+                "split": 4,
+                "average_speed": 2.98,
+                "average_grade_adjusted_speed": 2.98,
+                "average_heartrate": 153.9131736526946,
+                "pace_zone": 3
+              },
+              {
+                "distance": 1000.7,
+                "elapsed_time": 348,
+                "elevation_difference": -2.8,
+                "moving_time": 337,
+                "split": 5,
+                "average_speed": 2.97,
+                "average_grade_adjusted_speed": 2.98,
+                "average_heartrate": 158.01483679525222,
+                "pace_zone": 3
+              },
+              {
+                "distance": 149.7,
+                "elapsed_time": 75,
+                "elevation_difference": -2.6,
+                "moving_time": 75,
+                "split": 6,
+                "average_speed": 2,
+                "average_grade_adjusted_speed": 1.93,
+                "average_heartrate": 158.82666666666665,
+                "pace_zone": 1
+              }
+            ],
+            "splits_standard": [
+              {
+                "distance": 1609.9,
+                "elapsed_time": 729,
+                "elevation_difference": -8.6,
+                "moving_time": 720,
+                "split": 1,
+                "average_speed": 2.24,
+                "average_grade_adjusted_speed": 2.29,
+                "average_heartrate": 116.54166666666667,
+                "pace_zone": 1
+              },
+              {
+                "distance": 1611,
+                "elapsed_time": 534,
+                "elevation_difference": -0.6,
+                "moving_time": 531,
+                "split": 2,
+                "average_speed": 3.03,
+                "average_grade_adjusted_speed": 3.06,
+                "average_heartrate": 148.7680608365019,
+                "pace_zone": 4
+              },
+              {
+                "distance": 1609.3,
+                "elapsed_time": 579,
+                "elevation_difference": -3.4,
+                "moving_time": 558,
+                "split": 3,
+                "average_speed": 2.88,
+                "average_grade_adjusted_speed": 2.9,
+                "average_heartrate": 155.84892086330936,
+                "pace_zone": 3
+              },
+              {
+                "distance": 321.2,
+                "elapsed_time": 124,
+                "elevation_difference": -3.8,
+                "moving_time": 124,
+                "split": 4,
+                "average_speed": 2.59,
+                "average_grade_adjusted_speed": 2.54,
+                "average_heartrate": 158.7016129032258,
+                "pace_zone": 2
+              }
+            ],
+            "laps": [
+              {
+                "id": 72531360886,
+                "resource_state": 2,
+                "name": "Lap 0",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 710,
+                "moving_time": 711,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 1543.84,
+                "average_speed": 2.17,
+                "max_speed": 4.19996,
+                "lap_index": 0,
+                "split": 0,
+                "start_index": 0,
+                "end_index": 710,
+                "total_elevation_gain": 13,
+                "average_cadence": 77.8,
+                "device_watts": true,
+                "average_watts": 266.8,
+                "average_heartrate": 116.6,
+                "max_heartrate": 132,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360887,
+                "resource_state": 2,
+                "name": "Lap 1",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 121,
+                "moving_time": 121,
+                "start_date": "2026-09-25T15:19:11Z",
+                "start_date_local": "2026-09-25T17:19:11Z",
+                "distance": 400,
+                "average_speed": 3.31,
+                "max_speed": 4.18,
+                "lap_index": 1,
+                "split": 1,
+                "start_index": 711,
+                "end_index": 831,
+                "total_elevation_gain": 6.4,
+                "average_cadence": 89.2,
+                "device_watts": true,
+                "average_watts": 430,
+                "average_heartrate": 130.6,
+                "max_heartrate": 150,
+                "pace_zone": 5
+              },
+              {
+                "id": 72531360888,
+                "resource_state": 2,
+                "name": "Lap 2",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:21:12Z",
+                "start_date_local": "2026-09-25T17:21:12Z",
+                "distance": 42.38,
+                "average_speed": 1.41,
+                "max_speed": 3.24,
+                "lap_index": 2,
+                "split": 2,
+                "start_index": 832,
+                "end_index": 861,
+                "total_elevation_gain": 0,
+                "average_cadence": 60.2,
+                "device_watts": true,
+                "average_watts": 185.6,
+                "average_heartrate": 148.1,
+                "max_heartrate": 154,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360889,
+                "resource_state": 2,
+                "name": "Lap 3",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 117,
+                "moving_time": 117,
+                "start_date": "2026-09-25T15:21:42Z",
+                "start_date_local": "2026-09-25T17:21:42Z",
+                "distance": 400,
+                "average_speed": 3.42,
+                "max_speed": 4.12,
+                "lap_index": 3,
+                "split": 3,
+                "start_index": 862,
+                "end_index": 979,
+                "total_elevation_gain": 0,
+                "average_cadence": 87.6,
+                "device_watts": true,
+                "average_watts": 402.9,
+                "average_heartrate": 151.3,
+                "max_heartrate": 168,
+                "pace_zone": 6
+              },
+              {
+                "id": 72531360890,
+                "resource_state": 2,
+                "name": "Lap 4",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:23:40Z",
+                "start_date_local": "2026-09-25T17:23:40Z",
+                "distance": 63.16,
+                "average_speed": 2.11,
+                "max_speed": 3.48,
+                "lap_index": 4,
+                "split": 4,
+                "start_index": 980,
+                "end_index": 1009,
+                "total_elevation_gain": 0,
+                "average_cadence": 74.6,
+                "device_watts": true,
+                "average_watts": 235.4,
+                "average_heartrate": 155.7,
+                "max_heartrate": 159,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360891,
+                "resource_state": 2,
+                "name": "Lap 5",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 123,
+                "moving_time": 123,
+                "start_date": "2026-09-25T15:24:10Z",
+                "start_date_local": "2026-09-25T17:24:10Z",
+                "distance": 400,
+                "average_speed": 3.25,
+                "max_speed": 3.58,
+                "lap_index": 5,
+                "split": 5,
+                "start_index": 1010,
+                "end_index": 1133,
+                "total_elevation_gain": 4.8,
+                "average_cadence": 88.3,
+                "device_watts": true,
+                "average_watts": 417.5,
+                "average_heartrate": 153.6,
+                "max_heartrate": 169,
+                "pace_zone": 5
+              },
+              {
+                "id": 72531360892,
+                "resource_state": 2,
+                "name": "Lap 6",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:26:14Z",
+                "start_date_local": "2026-09-25T17:26:14Z",
+                "distance": 41.15,
+                "average_speed": 1.37,
+                "max_speed": 2.96,
+                "lap_index": 6,
+                "split": 6,
+                "start_index": 1134,
+                "end_index": 1162,
+                "total_elevation_gain": 0,
+                "average_cadence": 65.1,
+                "device_watts": true,
+                "average_watts": 178.1,
+                "average_heartrate": 157.1,
+                "max_heartrate": 161,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360893,
+                "resource_state": 2,
+                "name": "Lap 7",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 123,
+                "moving_time": 123,
+                "start_date": "2026-09-25T15:26:43Z",
+                "start_date_local": "2026-09-25T17:26:43Z",
+                "distance": 400,
+                "average_speed": 3.25,
+                "max_speed": 3.68,
+                "lap_index": 7,
+                "split": 7,
+                "start_index": 1163,
+                "end_index": 1286,
+                "total_elevation_gain": 0,
+                "average_cadence": 85.3,
+                "device_watts": true,
+                "average_watts": 371.1,
+                "average_heartrate": 153.8,
+                "max_heartrate": 163,
+                "pace_zone": 5
+              },
+              {
+                "id": 72531360894,
+                "resource_state": 2,
+                "name": "Lap 8",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:28:47Z",
+                "start_date_local": "2026-09-25T17:28:47Z",
+                "distance": 51.7,
+                "average_speed": 1.72,
+                "max_speed": 3.24,
+                "lap_index": 8,
+                "split": 8,
+                "start_index": 1287,
+                "end_index": 1315,
+                "total_elevation_gain": 0,
+                "average_cadence": 63.8,
+                "device_watts": true,
+                "average_watts": 140.5,
+                "average_heartrate": 155,
+                "max_heartrate": 162,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360895,
+                "resource_state": 2,
+                "name": "Lap 9",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 129,
+                "moving_time": 129,
+                "start_date": "2026-09-25T15:29:16Z",
+                "start_date_local": "2026-09-25T17:29:16Z",
+                "distance": 400,
+                "average_speed": 3.1,
+                "max_speed": 3.66,
+                "lap_index": 9,
+                "split": 9,
+                "start_index": 1316,
+                "end_index": 1445,
+                "total_elevation_gain": 5.6,
+                "average_cadence": 88.3,
+                "device_watts": true,
+                "average_watts": 404.1,
+                "average_heartrate": 153,
+                "max_heartrate": 165,
+                "pace_zone": 4
+              },
+              {
+                "id": 72531360896,
+                "resource_state": 2,
+                "name": "Lap 10",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:31:26Z",
+                "start_date_local": "2026-09-25T17:31:26Z",
+                "distance": 42.98,
+                "average_speed": 1.43,
+                "max_speed": 3.18,
+                "lap_index": 10,
+                "split": 10,
+                "start_index": 1446,
+                "end_index": 1474,
+                "total_elevation_gain": 0.4,
+                "average_cadence": 69,
+                "device_watts": true,
+                "average_watts": 206.9,
+                "average_heartrate": 165.2,
+                "max_heartrate": 168,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360897,
+                "resource_state": 2,
+                "name": "Lap 11",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 127,
+                "moving_time": 127,
+                "start_date": "2026-09-25T15:31:55Z",
+                "start_date_local": "2026-09-25T17:31:55Z",
+                "distance": 400,
+                "average_speed": 3.15,
+                "max_speed": 3.64,
+                "lap_index": 11,
+                "split": 11,
+                "start_index": 1475,
+                "end_index": 1601,
+                "total_elevation_gain": 0,
+                "average_cadence": 84.8,
+                "device_watts": true,
+                "average_watts": 353.3,
+                "average_heartrate": 152.5,
+                "max_heartrate": 165,
+                "pace_zone": 4
+              },
+              {
+                "id": 72531360898,
+                "resource_state": 2,
+                "name": "Lap 12",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:34:02Z",
+                "start_date_local": "2026-09-25T17:34:02Z",
+                "distance": 42.5,
+                "average_speed": 1.42,
+                "max_speed": 3.04,
+                "lap_index": 12,
+                "split": 12,
+                "start_index": 1602,
+                "end_index": 1631,
+                "total_elevation_gain": 0,
+                "average_cadence": 69.2,
+                "device_watts": true,
+                "average_watts": 217.3,
+                "average_heartrate": 162,
+                "max_heartrate": 165,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360899,
+                "resource_state": 2,
+                "name": "Lap 13",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 130,
+                "moving_time": 130,
+                "start_date": "2026-09-25T15:34:32Z",
+                "start_date_local": "2026-09-25T17:34:32Z",
+                "distance": 400,
+                "average_speed": 3.08,
+                "max_speed": 3.74,
+                "lap_index": 13,
+                "split": 13,
+                "start_index": 1632,
+                "end_index": 1762,
+                "total_elevation_gain": 5.2,
+                "average_cadence": 87.5,
+                "device_watts": true,
+                "average_watts": 370.7,
+                "average_heartrate": 158.2,
+                "max_heartrate": 164,
+                "pace_zone": 4
+              },
+              {
+                "id": 72531360900,
+                "resource_state": 2,
+                "name": "Lap 14",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:36:43Z",
+                "start_date_local": "2026-09-25T17:36:43Z",
+                "distance": 40.26,
+                "average_speed": 1.34,
+                "max_speed": 3.08,
+                "lap_index": 14,
+                "split": 14,
+                "start_index": 1763,
+                "end_index": 1791,
+                "total_elevation_gain": 1,
+                "average_cadence": 69.6,
+                "device_watts": true,
+                "average_watts": 223.5,
+                "average_heartrate": 159.1,
+                "max_heartrate": 166,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360901,
+                "resource_state": 2,
+                "name": "Lap 15",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 119,
+                "moving_time": 119,
+                "start_date": "2026-09-25T15:37:12Z",
+                "start_date_local": "2026-09-25T17:37:12Z",
+                "distance": 400,
+                "average_speed": 3.36,
+                "max_speed": 3.66,
+                "lap_index": 15,
+                "split": 15,
+                "start_index": 1792,
+                "end_index": 1911,
+                "total_elevation_gain": 0,
+                "average_cadence": 86.2,
+                "device_watts": true,
+                "average_watts": 370.7,
+                "average_heartrate": 157.7,
+                "max_heartrate": 170,
+                "pace_zone": 5
+              },
+              {
+                "id": 72531360902,
+                "resource_state": 2,
+                "name": "Lap 16",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 29,
+                "moving_time": 30,
+                "start_date": "2026-09-25T15:39:12Z",
+                "start_date_local": "2026-09-25T17:39:12Z",
+                "distance": 47.37,
+                "average_speed": 1.58,
+                "max_speed": 3.44,
+                "lap_index": 16,
+                "split": 16,
+                "start_index": 1912,
+                "end_index": 1940,
+                "total_elevation_gain": 0,
+                "average_cadence": 64.5,
+                "device_watts": true,
+                "average_watts": 185.6,
+                "average_heartrate": 160,
+                "max_heartrate": 165,
+                "pace_zone": 1
+              },
+              {
+                "id": 72531360903,
+                "resource_state": 2,
+                "name": "Lap 17",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 25,
+                "moving_time": 25,
+                "start_date": "2026-09-25T15:39:41Z",
+                "start_date_local": "2026-09-25T17:39:41Z",
+                "distance": 36.1,
+                "average_speed": 1.44,
+                "max_speed": 1.44,
+                "lap_index": 17,
+                "split": 17,
+                "start_index": 1941,
+                "end_index": 1966,
+                "total_elevation_gain": 0,
+                "average_cadence": 55.7,
+                "device_watts": true,
+                "average_watts": 84.4,
+                "average_heartrate": 150.8,
+                "max_heartrate": 158,
+                "pace_zone": 1
+              }
+            ],
+            "best_efforts": [
+              {
+                "id": 85088346615,
+                "resource_state": 2,
+                "name": "400m",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 115,
+                "moving_time": 115,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 400,
+                "pr_rank": null,
+                "achievements": [],
+                "start_index": 865,
+                "end_index": 980
+              },
+              {
+                "id": 85088346616,
+                "resource_state": 2,
+                "name": "1/2 mile",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 249,
+                "moving_time": 249,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 805,
+                "pr_rank": null,
+                "achievements": [],
+                "start_index": 865,
+                "end_index": 1114
+              },
+              {
+                "id": 85088346617,
+                "resource_state": 2,
+                "name": "1K",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 328,
+                "moving_time": 328,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 1000,
+                "pr_rank": null,
+                "achievements": [],
+                "start_index": 712,
+                "end_index": 1040
+              },
+              {
+                "id": 85088346612,
+                "resource_state": 2,
+                "name": "1 mile",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 532,
+                "moving_time": 532,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 1609,
+                "pr_rank": null,
+                "achievements": [],
+                "start_index": 711,
+                "end_index": 1243
+              },
+              {
+                "id": 85088346613,
+                "resource_state": 2,
+                "name": "2 mile",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 1109,
+                "moving_time": 1109,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 3219,
+                "pr_rank": null,
+                "achievements": [],
+                "start_index": 793,
+                "end_index": 1902
+              },
+              {
+                "id": 85088346614,
+                "resource_state": 2,
+                "name": "5K",
+                "activity": {
+                  "id": 20325727656,
+                  "id_str": "20325727656",
+                  "visibility": "everyone",
+                  "resource_state": 1
+                },
+                "athlete": {
+                  "id": 145839979,
+                  "id_str": "145839979",
+                  "resource_state": 1
+                },
+                "elapsed_time": 1887,
+                "moving_time": 1887,
+                "start_date": "2026-09-25T15:07:20Z",
+                "start_date_local": "2026-09-25T17:07:20Z",
+                "distance": 5000,
+                "pr_rank": null,
+                "achievements": [],
+                "start_index": 17,
+                "end_index": 1904
+              }
+            ],
+            "gear": {
+              "id": "g29920880",
+              "primary": false,
+              "name": "Under Armour Velocity 4",
+              "nickname": null,
+              "resource_state": 2,
+              "retired": false,
+              "distance": 72586,
+              "converted_distance": 72.6
+            },
+            "photos": {
+              "primary": null,
+              "count": 0
+            },
+            "stats_visibility": [
+              {
+                "type": "heart_rate",
+                "visibility": "everyone"
+              },
+              {
+                "type": "pace",
+                "visibility": "everyone"
+              },
+              {
+                "type": "power",
+                "visibility": "everyone"
+              },
+              {
+                "type": "speed",
+                "visibility": "everyone"
+              },
+              {
+                "type": "calories",
+                "visibility": "everyone"
+              },
+              {
+                "type": "weight_lifted",
+                "visibility": "everyone"
+              }
+            ],
+            "hide_from_home": false,
+            "sport_image_visibility": "everyone",
+            "embed_token": "88969f61dc68e506da2eef67b5c1a873a920d74c",
+            "similar_activities": {
+              "effort_count": 2,
+              "average_speed": 2.66559585492228,
+              "min_average_speed": 2.664976720124159,
+              "mid_average_speed": 2.665596674552477,
+              "max_average_speed": 2.666216917488324,
+              "pr_rank": 2,
+              "frequency_milestone": null,
+              "trend": {
+                "speeds": [
+                  2.666216917488324,
+                  2.665596674552477
+                ],
+                "current_activity_index": 1,
+                "min_speed": 2.664976720124159,
+                "mid_speed": 2.665596674552477,
+                "max_speed": 2.666216917488324,
+                "direction": -1
+              },
+              "resource_state": 2
+            },
+            "available_zones": [
+              "heartrate",
+              "pace",
+              "power"
+            ]
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Strava Trigger": {
+      "main": [
+        [
+          {
+            "node": "activity_id'den api ile antrenmani cek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "drive'a ciktilari logla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Age,Resting HR hedef var mi?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "antrenman günlerini hesapla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "notion sayfasinin olustur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page markdown in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create file from text1": {
+      "main": [
+        [
+          {
+            "node": "olusturulan plani kullanicinin satirlarina kaydet linkini ekle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Query Data Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Data Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qwen Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "antrenman zonlari kayitli mi?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haftalık Tetikleyici": {
+      "main": [
+        [
+          {
+            "node": "Tüm Kullanıcılar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tüm Kullanıcılar": {
+      "main": [
+        [
+          {
+            "node": "Aktif Planı Olanlar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aktif Planı Olanlar": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Haftalık Antrenmanlar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haftalık Antrenmanlar": {
+      "main": [
+        [
+          {
+            "node": "Haftalık Özet Hesapla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haftalık Özet Hesapla": {
+      "main": [
+        [
+          {
+            "node": "Antrenman Var mı?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antrenman Var mı?": {
+      "main": [
+        [
+          {
+            "node": "Planı Oku",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Motivasyon Mesajı",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivasyon Mesajı": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planı Oku": {
+      "main": [
+        [
+          {
+            "node": "Haftalık Değerlendirme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Haftalık Değerlendirme",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Yapılandırılmış Çıktı": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Haftalık Değerlendirme",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haftalık Değerlendirme": {
+      "main": [
+        [
+          {
+            "node": "Haftalık Rapor Gönder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haftalık Rapor Gönder": {
+      "main": [
+        [
+          {
+            "node": "Haftalık Özet Kaydet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haftalık Özet Kaydet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Yapılandırılmış Çıktı",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Age,Resting HR hedef var mi?": {
+      "main": [
+        [
+          {
+            "node": "antrenman zonlari kayitli mi?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Formu gönder ve yanit bekle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formu gönder ve yanit bekle": {
+      "main": [
+        [
+          {
+            "node": "Gelen strava linkinden sayfayi cek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gelen strava linkinden sayfayi cek": {
+      "main": [
+        [
+          {
+            "node": "Sayfadan activity_id'yi bul",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sayfadan activity_id'yi bul": {
+      "main": [
+        [
+          {
+            "node": "Activity_id'den api ile cek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activity_id'den api ile cek": {
+      "main": [
+        [
+          {
+            "node": "athlete_id'yi al ve kaydet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "athlete_id'yi al ve kaydet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "antrenman zonlari kayitli mi?": {
+      "main": [
+        [
+          {
+            "node": "karvonen formülü ile zonlari hesapla",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "user sheet'inde ilgili kullaniciyi cek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "karvonen formülü ile zonlari hesapla": {
+      "main": [
+        [
+          {
+            "node": "bunlari user sheet'ine kaydet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bunlari user sheet'ine kaydet": {
+      "main": [
+        [
+          {
+            "node": "user sheet'inde ilgili kullaniciyi cek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user sheet'inde ilgili kullaniciyi cek": {
+      "main": [
+        [
+          {
+            "node": "Antrenman plani mevcut mu?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antrenman plani mevcut mu?": {
+      "main": [
+        [
+          {
+            "node": "sistem promptunu cek",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antrenman plani varsa kullaniciyi bilgilendir.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sistem promptunu cek": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notion sayfasinin olustur": {
+      "main": [
+        [
+          {
+            "node": "olusturulan sayfayi post et",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "olusturulan sayfayi post et": {
+      "main": [
+        [
+          {
+            "node": "Antrenöre plani sor onay al",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antrenöre plani sor onay al": {
+      "main": [
+        [
+          {
+            "node": "olusturulan sayfayi ce ve drive'a logla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "olusturulan sayfayi ce ve drive'a logla": {
+      "main": [
+        [
+          {
+            "node": "Create file from text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "olusturulan plani kullanicinin satirlarina kaydet linkini ekle": {
+      "main": [
+        [
+          {
+            "node": "antrenör plani onayladi mi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "antrenör plani onayladi mi": {
+      "main": [
+        [
+          {
+            "node": "onaylanan plani kullaniciya gönder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sistem promptunu cek",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "activity_id'den api ile antrenmani cek": {
+      "main": [
+        [
+          {
+            "node": "Kosu antrenmani mi?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kosu antrenmani mi?": {
+      "main": [
+        [
+          {
+            "node": "GRU'ya antrenmani gönder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GRU'ya antrenmani gönder": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "antrenman günlerini hesapla": {
+      "main": [
+        [
+          {
+            "node": "confidence 0.6'dan büyük mü?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "confidence 0.6'dan büyük mü?": {
+      "main": [
+        [
+          {
+            "node": "training sheet'ine ilgili bilgileri kaydet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "kullanicidan antrenman türünü ögren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "training sheet'ine ilgili bilgileri kaydet": {
+      "main": [
+        [
+          {
+            "node": "sistem promptunu cek1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sistem promptunu cek1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "kullanicidan antrenman türünü ögren": {
+      "main": [
+        [
+          {
+            "node": "training sheet'ine bilgileri kaydet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "training sheet'ine bilgileri kaydet": {
+      "main": [
+        [
+          {
+            "node": "sistem promptunu cek1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "drive'a ciktilari logla": {
+      "main": [
+        [
+          {
+            "node": "raporu kullaniciya gönder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "raporu kullaniciya gönder": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "7a5215b9-9618-4642-bc51-0063e83370c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b546d953f21094d8a4dda27d097e6ebddaeb766977399130ab4b50ec8f435189"
+  },
+  "nodeGroups": [],
+  "id": "zjY44xYYf2GXEidt",
+  "tags": []
+}
