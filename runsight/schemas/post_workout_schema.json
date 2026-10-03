@@ -1,0 +1,77 @@
+{
+  "type": "object",
+  "properties": {
+    "output": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Antrenmanın 1-2 cümlelik kısa özeti"
+        },
+        "details": {
+          "type": "object",
+          "properties": {
+            "gru_assessment": {
+              "type": "string",
+              "description": "GRU'nun sınıflandırmasının (aerobik/anaerobik, confidence) yorumu"
+            },
+            "plan_comparison": {
+              "type": "string",
+              "description": "Planlanan yoğunluk ile gerçekleşen yoğunluğun karşılaştırması"
+            },
+            "load_and_recovery": {
+              "type": "string",
+              "description": "Antrenman yükü ve toparlanma değerlendirmesi"
+            },
+            "data_quality": {
+              "type": "string",
+              "description": "Veri kalitesiyle ilgili gözlemler"
+            },
+            "heart_rate_drift": {
+              "type": "string",
+              "description": "Nabız driftinin (aerobic decoupling) değerlendirmesi"
+            }
+          },
+          "required": [
+            "gru_assessment",
+            "plan_comparison",
+            "load_and_recovery",
+            "data_quality",
+            "heart_rate_drift"
+          ]
+        },
+        "action_items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Tam olarak 3 somut aksiyon maddesi"
+        },
+        "uncertainties": {
+          "type": "string",
+          "description": "Emin olunamayan noktalar / varsayımlar"
+        },
+        "sources_used": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "summary",
+        "details",
+        "action_items",
+        "uncertainties",
+        "sources_used"
+      ]
+    }
+  },
+  "required": [
+    "output"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunSight post-workout agent output"
+}

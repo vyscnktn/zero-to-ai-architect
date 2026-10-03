@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunSight onboarding agent output (training plan)",
+  "type": "object",
+  "properties": {
+    "plan_ozeti": {
+      "type": "string",
+      "description": "Planın kısa özeti"
+    },
+    "toplam_hafta": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "haftalik_plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hafta": {
+            "type": "integer"
+          },
+          "faz": {
+            "type": "string"
+          },
+          "haftalik_hedef_km": {
+            "type": "number"
+          },
+          "antrenmanlar": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "gun": {
+                  "type": "string"
+                },
+                "tur": {
+                  "type": "string"
+                },
+                "sure_dk": {
+                  "type": "number"
+                },
+                "hedef_zone": {
+                  "type": "string"
+                },
+                "aciklama": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "gun",
+                "tur",
+                "sure_dk",
+                "hedef_zone",
+                "aciklama"
+              ]
+            }
+          }
+        },
+        "required": [
+          "hafta",
+          "faz",
+          "haftalik_hedef_km",
+          "antrenmanlar"
+        ]
+      }
+    },
+    "riskler": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "belirsizlik": {
+      "type": "string",
+      "description": "düşük / orta / yüksek"
+    },
+    "kaynaklar": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "plan_ozeti",
+    "toplam_hafta",
+    "haftalik_plan",
+    "riskler",
+    "belirsizlik",
+    "kaynaklar"
+  ]
+}

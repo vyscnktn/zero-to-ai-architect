@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RunSight weekly review agent output",
+  "type": "object",
+  "properties": {
+    "uyum_yuzdesi": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Plan uyum yüzdesi"
+    },
+    "degerlendirme": {
+      "type": "string",
+      "description": "1-2 cümlelik plan-gerçekleşen kıyası"
+    },
+    "oneriler": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "sonraki_hafta_ayarlamasi": {
+      "type": "string",
+      "description": "Tek cümlelik küçük ayarlama"
+    }
+  },
+  "required": [
+    "uyum_yuzdesi",
+    "degerlendirme",
+    "oneriler",
+    "sonraki_hafta_ayarlamasi"
+  ]
+}
