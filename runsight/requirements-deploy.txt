@@ -1,0 +1,6 @@
+# Sadece inference (8_gru_deploy.py) icin gerekenler — egitimde kullanilan
+# (requirements.txt / .venv) ile AYNI versiyonlar, model/scaler'larin
+# kaydedildigi ortamla uyumsuzluk (ozellikle Keras'ta) yasanmasin diye.
+tensorflow==2.21.0
+scikit-learn==1.9.1
+numpy==2.5.3

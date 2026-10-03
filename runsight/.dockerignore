@@ -1,0 +1,15 @@
+# Bu klasorde birkac GB'lik CSV/veri dosyalari var (endomondoHR_*.csv,
+# aerobik_anaerobik.csv) — Dockerfile bunlarin hicbirine ihtiyac duymuyor,
+# bu yuzden build context'e (docker build sirasinda Docker daemon'a
+# gonderilen dosyalar) dahil etmiyoruz, yoksa build gereksiz yere cok
+# yavaslar.
+*.csv
+*.ipynb
+.venv/
+__pycache__/
+output_plots/
+*.png
+gru_arrays.npz
+sample_streams.json
+kt_search/
+.env

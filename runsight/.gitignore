@@ -1,3 +1,12 @@
 *.csv
 __pycache__/
 .venv/
+
+# Secrets / local
+.env
+*_key.txt
+*api_key*
+n8n/d
+_scratch_markdown_dump.txt
+endomondoHR*.csv
+*.npz
