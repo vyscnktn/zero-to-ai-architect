@@ -77,7 +77,7 @@ GRU modeli, **aynı etiketi ham sinyalden (speed, heart_rate, altitude, GPS-tür
 
 ### Girdi kanalları
 
-Eğitim ve deploy'da (`8_gru_deploy.py::_extract_channels`) kullanılan 4 kanal, her biri 500 noktaya yeniden örneklenmiqş:
+Eğitim ve deploy'da (`8_gru_deploy.py::_extract_channels`) kullanılan 4 kanal, her biri 500 noktaya yeniden örneklenmiş:
 
 1. `speed` (km/h)
 2. `heart_rate` (bpm)
@@ -98,35 +98,12 @@ Eğitim ve deploy'da (`8_gru_deploy.py::_extract_channels`) kullanılan 4 kanal,
 - Tuning hedefi: `val_auc`.
 - Çıktı: sigmoid olasılık (anaerobik olasılığı) → `confidence = |proba − 0.5| × 2`.
 
-### Değerlendirme Sonuçları (test seti)
-
-Antrenman bazlı test setinde (13.884 antrenman) elde edilen sonuçlar:
-
-| | precision | recall | f1-score | support |
-|---|---|---|---|---|
-| aerobik | 0.78 | 0.73 | 0.76 | 6.980 |
-| anaerobik | 0.75 | 0.79 | 0.77 | 6.904 |
-| **accuracy** | | | **0.76** | 13.884 |
-| macro avg | 0.76 | 0.76 | 0.76 | 13.884 |
-| weighted avg | 0.76 | 0.76 | 0.76 | 13.884 |
-
-**Test AUC: 0.850**
-
-Confusion matrix:
-
-```
-                    tahmin: aerobik   tahmin: anaerobik
-gerçek: aerobik           5114              1866
-gerçek: anaerobik         1422              5482
-```
-
-**Yorum:** İki sınıf da büyüklük olarak dengeli (support ~6.9–7.0K, class_weight zaten sınıf dengesizliğine karşı kullanıldı), precision/recall arasında sınıflar arası belirgin bir sapma yok — model tek bir sınıfa kaymıyor. AUC 0.85, GRU'nun kişisel eşik özelliğine hiç erişimi olmadan, sadece ham sinyale bakarak kural tabanlı pipeline'ın kararını yüksek sadakatle yeniden üretebildiğini gösteriyor — distillation-fidelity iddiasının somut kanıtı bu. Yanlış sınıflandırmaların büyük kısmı muhtemelen `anaerobic_time_frac` değeri `cutoff=0.02`'ye yakın, doğası gereği sınırda kalan antrenmanlardan geliyor — bu örnekler kural tabanlı pipeline için de az farkla "aerobik" ya da "anaerobik" tarafına düşen, ikili etiketlemenin kaçınılmaz belirsizlik bölgesi.
-
 ## 5. LLM Ajanı
 
-n8n içinde **LangChain Agent** node'u olarak çalışıyor, iki akışta:
+n8n içinde **LangChain Agent** node'u olarak çalışıyor, üç akışta:
 
 - **Onboarding ajanı** — yeni kullanıcı profil/hedef bilgisini toplayıp yapılandırıyor.
+- **Haftalık değerlendirme ajanı** — her pazar 20:00'de (cron `0 20 * * 0`) Notion'daki haftalık planı gerçekleşen antrenmanlarla karşılaştırıp uyum yüzdesi, öneriler ve sonraki hafta için küçük bir ayarlama üretiyor.
 - **Antrenman sonrası koçluk ajanı** — GRU'nun sınıflandırmasını, geçmiş antrenman kaytlarını ve RAG bilgi tabanını kullanarak kişiselleştirilmiş rapor üretiyor.
 
 ### Sabit çıktı şeması (Structured Output Parser)
@@ -141,13 +118,13 @@ Ajan çıktısı, n8n'in Structured Output Parser node'una verilen manuel JSON S
 
 ### Dinamik sistem promptları
 
-Her iki ajanın sistem promptu, n8n'in kendisine gömülü değil — çalışma zamanında GitHub reposundan (`raw.githubusercontent.com/.../post_workout_prompt.md`, `onboarding_prompt.md`) bir HTTP Request node ile çekiliyor. Bu sayede prompt değişikliği n8n'e girmeden, sadece repoya push ile yayılıyor.
+Üç ajanın sistem promptu, n8n'in kendisine gömülü değil — çalışma zamanında GitHub reposundan (`raw.githubusercontent.com/.../post_workout_prompt.md`, `onboarding_prompt.md`, `weekly_review_prompt.md`) bir HTTP Request node ile çekiliyor. Bu sayede prompt değişikliği n8n'e girmeden, sadece repoya push ile yayılıyor.
 
 ### RAG (bonus)
 
-`vectorStoreInMemory` tabanlı basit bir RAG hattı:
+**Pinecone** (serverless, 1536 boyut, cosine) tabanlı kalıcı bir RAG hattı:
 
-1. **Insert:** Yüklenen spor bilimi dokümanları (Seiler 2010, laktat ölçümü, fonksiyonel eşik, maksimum nabız kullanımı üzerine kaynaklar) `Default Data Loader` ile parçalanıp `Embeddings OpenAI` ile vektörleştirilip in-memory store'a yazılıyor.
+1. **Insert:** Yüklenen spor bilimi dokümanları (Seiler 2010, laktat ölçümü, fonksiyonel eşik, maksimum nabız kullanımı üzerine kaynaklar) `Default Data Loader` ile parçalanıp `Embeddings OpenAI` ile vektörleştirilip Pinecone index'ine yazılıyor.
 2. **Retrieve:** Aynı embedding modeliyle (tutarlılık için insert/retrieve'de zorunlu), ajana `knowledge_base` adında bir "retrieve-as-tool" aracı olarak bağlanıyor - ajan gerektiğinde kendi sorgusunu üretip alakalı pasajları çekiyor.
 
 ## 6. Confidence Bazlı Routing + İnsan Onayı (Human-in-the-loop, bonus)
@@ -165,22 +142,24 @@ Asağıdaki diyagram, workflow'nu üç ana akış halinde özetliyor:
 
 **İ. Antrenman Sonrası Akış**
 
-`Strava Trigger` → `Get Activity Streams` → `If (type == Run)` → `GRU Model API (AWS Lambda, ECR image)` → `Get row(s) in sheet` (geçmiş kayıt) → `If (confidence >= 0.6)`:
+`Strava Trigger` → `Get Activity Streams` → `If (type == Run)` → `GRU Model API (AWS Lambda, ECR image)` → **`kardiyak kaymayi hesapla` (Code, JavaScript)**: GRU'nun döndürdüğü alanları (`training_zone`, `confidence`, `hr_p10`, `hr_p95`) korur, `Get Activity Streams` çıktısındaki ham `heartrate`/`velocity_smooth` dizilerinden **Efficiency Factor** (hız/nabız) yöntemiyle `hr_drift_pct` hesaplar: antrenman iki eşit yarıya bölünür, her yarı için ortalama hız/ortalama nabız oranı çıkarılır, iki yarı arasındaki yüzde fark raporlanır (pozitif = ikinci yarıda aynı nabızla daha az hız üretiliyor → kardiyak drift). Oran tabanlı olduğu için pace'in kasıtlı değiştiği (progression/interval) antrenmanlarda yanlış pozitifi büyük ölçüde önler; yetersiz veri veya çok düşük ortalama hızda (`< 3 km/h`, ör. ısınma ağırlıklı kayıt) `null` döner. → `Get row(s) in sheet` (geçmiş kayıt) → `If (confidence >= 0.6)`:
 
 - True → `Append row (sheet)`
 - False → `Telegram form` (insan onayı) → `Append row (sheet, düzeltilmiş etiket)`
 
 Devam: `HTTP Request` (GitHub'dan `post_workout_prompt.md` çek) → `AI Agent` (Structured Output Parser + Sheets/Notion/RAG araçları) → `Create file` (Drive log) & `Telegram` (rapor).
 
+**Antrenmanın plana göre hafta/gün konumu:** `athlete_id'yi al ve kaydet` node'u onboarding'de `plan_start_date` (`{{ $now }}`, tam ISO datetime) sütununu users sheet'ine yazıyor. Post-workout tarafında `antrenman günlerini hesapla` (Code) node'u bu tarihi antrenman tarihiyle kıyaslayıp `plan_hafta_no` ve `plan_gun_adi` alanlarını deterministik olarak hesaplıyor ve agent prompt'una geçiriyor — böylece LLM'in kendi başına tarih aritmetiği yapıp hata yapması engelleniyor, hangi antrenmanın planın kaçıncı haftasına/gününe denk geldiği n8n katmanında kesin olarak belirleniyor.
+
 **II. Onboarding Akışı**
 
 `Telegram Trigger` → ... → `Append/update row (sheet)` → `HTTP Request` (GitHub'dan `onboarding_prompt.md` çek) → `AI Agent` (Structured Output Parser + Gemini) → `Notion` sayfası oluştur → `Gmail` onayı → `Telegram` bildirimi.
 
-**III. RAG Besleme (manuel tetik)**
+**III. RAG Besleme (manuel tetik, kalıcı depo — Pinecone)**
 
-`Dosya yükle` (PDF/MD, 4 kayınak) → `Default Data Loader` → `Embeddings OpenAI` → `Insert Data to Store` (vectorStoreInMemory, insert).
+`Dosya yükle` (PDF/MD, kaynak dokümanlar) → `Default Data Loader` → `Embeddings OpenAI` → `Pinecone Vector Store` (mode: insert) — index: `n8n` (Pinecone, serverless, dimension 1536, metric cosine).
 
-`Query Data Tool` (vectorStoreInMemory, retrieve-as-tool, aynı Embeddings modeli ile) → `AI Agent`'ra "knowledge_base" aracı olarak bağlı.
+`Pinecone Vector Store` (mode: retrieve-as-tool, `toolDescription`: "Use this knowledge base to answer questions from the user", aynı Embeddings modeli ile) → `AI Agent`'a "knowledge_base" aracı olarak bağlı. Kalıcı bir vektör veritabanı olduğu için n8n instance'ı yeniden başlasa da veri kaybolmuyor (önceki sürümde `vectorStoreInMemory` kullanılıyordu, bu artık Pinecone ile değiştirildi).
 
 **IV. Haftalık Takip ve Öğrenme Döngüsü (bonus — İleri seviye)**
 
@@ -241,21 +220,42 @@ docker build -t runsight-gru .
 # ECR'a push + Lambda function'ı bu image'dan oluştur/güncelle
 ```
 
-### n8n
+### n8n (self-hosted)
 
-1. n8n Cloud'da workflow'u import et (JSON export).
-2. Gerekli kimlik bilgilerini bağla: Strava OAuth2, Telegram Bot, Google Sheets, Notion, Gmail, OpenAI (Agent + Embeddings), Google Gemini.
-3. GitHub raw prompt URL'lerinin (`HTTP Request` node'ları) doğru repo/branch'e işaret ettiğinden emin ol.
-4. RAG için: `Upload your file here` node'undan kaynak dokümanları bir kez yükleyip vektör store'u doldur.
-5. Workflow'u **aktif** hale getir.
+Proje, n8n Cloud deneme sürümünden kendi sunucuma (Hetzner VPS, Docker, reverse proxy + SSL, `https://n8n.vyscnktn.de`) taşındı. Cloud'a özgü bir şeye bağımlı değil; n8n Cloud'da da aynı şekilde çalışır.
+
+**Sunucu ortam değişkenleri:**
+
+```
+N8N_HOST=n8n.vyscnktn.de
+N8N_PROTOCOL=https
+WEBHOOK_URL=https://n8n.vyscnktn.de/
+N8N_EDITOR_BASE_URL=https://n8n.vyscnktn.de
+N8N_PROXY_HOPS=1
+N8N_ENCRYPTION_KEY=<sabit, yedekle>
+GENERIC_TIMEZONE=Europe/Berlin
+TZ=Europe/Berlin
+```
+
+**Kurulum adımları:**
+
+1. `n8n/runsight_flow.json` dosyasını import et.
+2. Kimlik bilgilerini (credentials) oluştur ve node'lara bağla: Strava OAuth2, Telegram Bot, Google Sheets / Drive / Gmail (tek Google OAuth client), Notion, OpenAI (Agent + Embeddings), Google Gemini, Pinecone. Self-hosted'da Cloud'daki hazır AI kredileri yoktur; OpenAI ve Gemini için kendi API anahtarların gerekir.
+3. OAuth redirect URI'leri: Google Cloud'da `https://n8n.vyscnktn.de/rest/oauth2-credential/callback` ekle. Strava'da "Authorization Callback Domain" alanına yalnızca alan adını yaz (`n8n.vyscnktn.de`). Google uygulaması "Testing" modundaysa token'lar 7 günde dolar; kalıcı olması için uygulamayı yayınla (Publish app).
+4. GitHub raw prompt URL'lerinin (`HTTP Request` node'ları) doğru repo/branch'e işaret ettiğinden emin ol (`onboarding_prompt.md`, `post_workout_prompt.md`, `weekly_review_prompt.md`).
+5. RAG için: `Upload your file here` form trigger'ından kaynak dokümanları bir kez yükleyip Pinecone index'ini doldur.
+6. Workflow'u **publish** et (n8n 2.x'te taslak kaydetmek production'ı değiştirmez; tetikleyiciler yalnızca yayınlanmış sürümle çalışır). Strava ve Telegram webhook'ları publish anında yeni alan adına kaydolur.
+
+**Not — Python yok:** Self-hosted n8n'de Python runner bulunmaz, bu yüzden workflow'daki Code node'ları (Karvonen zonları, antrenman günü/hafta hesabı, kardiyak kayma) **JavaScript** ile yazıldı. Mantık Python sürümüyle birebir aynı; sayısal olarak doğrulandı (Karvonen zonları kullanıcı sheet'indeki değerlerle eşleşiyor).
 
 ## 10. Sonuçlar ve Kısıtlar
 
 - Kural tabanlı pipeline (`run_zone_pipeline`), veri setindeki her antrenman için tutarlı, fizyolojik gerekçeli bir aerobik/anaerobik etiketi üretiyor ve GRU modelinin hem eğitim etiketi hem de değerlendirme referansı (distillation-fidelity) olarak kullanılıyor.
 - GRU modeli, kişisel eşik bilgisine erişimi olmadan, sadece ham sinyalden bu etiketi yüksek sadakatle yeniden üretmeyi öğreniyor — bu da üründe tek-antrenmanlık, geçmişsiz (soğuk başlangıç) tahmini mümkün kılıyor.
 - **Bilinen kısıt — çoklu kullanıcı (multi-tenant):** Strava webhook'u uygulama seviyesinde (client_id) tüm kullanıcılar için tetikleniyor, ama API çağrıları şu an geliştiricinin tek bir OAuth2 kimlik bilgisine bağlı. Üretime taşımak için kullanıcı başına OAuth token saklama/yenileme (per-athlete token store) eklenmesi gerekiyor — bilinçli olarak bu iterasyonun kapsamı dışında bırakıldı.
-- **Bilinen kısıt — in-memory vektör store:** RAG için kullanılan `vectorStoreInMemory`, n8n instance'ı yeniden başladığında sıfırlanıyor; kalıcı bir vektör veritabanına (örn. Pinecone/Qdrant) geçiş üretim için önerilir.
+- **Çözüldü — kalıcı vektör store:** RAG başta `vectorStoreInMemory` ile kuruldu (n8n restart'ında sıfırlanıyordu); bu artık **Pinecone**'a taşındı (serverless index, dimension 1536, metric cosine) — veri kalıcı.
 - **Bilinen kısıt — kişisel HR eşiği otomatik kalibrasyonu henüz yok:** Lambda API'sinin döndürdüğü `hr_p10`/`hr_p95` alanları, gelecekte kullanıcının `personal_hr_ceiling`/`personal_hr_floor` değerlerinin geçmiş antrenmanlar üzerinden otomatik yeniden hesaplanması için tasarlandı, ama bu adım haftalık öğrenme döngüsüne henüz entegre edilmedi — şu an döngü sadece plan-uyum karşılaştırması ve öneri üretiyor, eşik değerlerini güncellemiyor.
+- **Bilinen kısıt — kardiyak drift metriği (`hr_drift_pct`) progressive/interval antrenmanlarda temkinli yorumlanmalı:** Efficiency Factor (hız/nabız) oranı, pace ile nabız arasındaki ilişkiyi eşik yakınında doğrusal varsayıyor. Steady-state/tempo koşularda güvenilir, ama kasıtlı olarak ikinci yarısı belirgin hızlandırılan (progression) antrenmanlarda fizyolojik olarak normal bir nabız artışını yanlışlıkla drift olarak işaretleyebilir. Agent prompt'unda bu durum için temkinli yorumlama talimatı var, ama algoritmik bir düzeltme (antrenman tipine göre ağırlıklandırma) henüz yapılmadı.
 
 ## 11. Proje Yapısı
 
@@ -272,5 +272,14 @@ runsight/
 ├── requirements-deploy.txt   # Sadece inference bağımlılıkları
 ├── gru_model.keras           # Eğitilmiş model
 ├── gru_preprocessing.pkl     # Kanal sırası + scaler'lar
+├── onboarding_prompt.md      # Onboarding ajanı sistem promptu
+├── post_workout_prompt.md    # Antrenman sonrası koç ajanı sistem promptu
+├── weekly_review_prompt.md   # Haftalık değerlendirme ajanı sistem promptu
+├── schemas/                  # Ajan çıktı JSON şemaları (draft-07)
+│   ├── onboarding_schema.json
+│   ├── post_workout_schema.json
+│   └── weekly_review_schema.json
+├── n8n/
+│   └── runsight_flow.json    # n8n workflow export (içe aktarılıp çalıştırılabilir)
 └── rag_documents/            # RAG bilgi tabanı kaynakları (Seiler 2010, eşik/HRmax dokümanları)
 ```
