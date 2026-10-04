@@ -123,6 +123,12 @@ Test seti: 13.884 antrenman (6.980 aerobik / 6.904 anaerobik). Train/test bölme
 
 Confusion matrix: 5.114 aerobik doğru, 1.866 aerobik → anaerobik sanıldı; 5.482 anaerobik doğru, 1.422 anaerobik → aerobik sanıldı. Bu grafikler `9_gru_evaluate.ipynb` ile kayıtlı modelden (`gru_model.keras`) yeniden üretilebilir; eğitim eğrisi için ham `history`, `gru_history_original.json` dosyasında.
 
+**Hatalar nerede yoğunlaşıyor?** Etiket, `yc_test > 0.02` kuralıyla üretildiği için (`yc_test` = antrenmanın eşik üstünde geçen süre oranı) GRU'nun hata oranını bu sürekli skora göre inceledik (`9_gru_evaluate.ipynb`, bölüm 5):
+
+![Hata oranı, etiket eşiğine (0.02) yakınlıkla](error_by_threshold_distance.png)
+
+Hata oranı tam cutoff çevresinde zirve yapıyor: `0.01 < yc ≤ 0.02` aralığında %45, her iki yönde de düşüyor (eşikten uzak, `yc > 0.10` antrenmanlarda %12-19). Genel hata oranı %23,7 (3.288 / 13.884). Yani model rastgele hata yapmıyor; kural tabanlı etiketin kendi sınırının belirsiz olduğu bölgede zorlanıyor. Not: bu, "hataların çoğu eşik yakınında" anlamına gelmez; verinin %41'i tamamen aerobik (`yc = 0`, hata oranı %23) olduğu için mutlak hata sayısının büyük kısmı o grupta.
+
 ## 5. LLM Ajanı
 
 n8n içinde **LangChain Agent** node'u olarak çalışıyor, üç akışta:
@@ -301,6 +307,7 @@ runsight/
 ├── learning_curve_original.png  # Eğitim vs doğrulama AUC/loss eğrisi
 ├── gru_history_original.json    # Eğitimin epoch bazlı metrikleri
 ├── roc_auc_curve.png         # ROC eğrisi + confusion matrix (test seti)
+├── error_by_threshold_distance.png  # Hata oranı vs. etiket eşiğine (0.02) yakınlık
 ├── onboarding_prompt.md      # Onboarding ajanı sistem promptu
 ├── post_workout_prompt.md    # Antrenman sonrası koç ajanı sistem promptu
 ├── weekly_review_prompt.md   # Haftalık değerlendirme ajanı sistem promptu
