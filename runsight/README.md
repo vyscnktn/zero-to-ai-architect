@@ -97,6 +97,31 @@ Eğitim ve deploy'da (`8_gru_deploy.py::_extract_channels`) kullanılan 4 kanal,
 - Sınıf dengesizliğine karşı `class_weight` kullanıldı.
 - Tuning hedefi: `val_auc`.
 - Çıktı: sigmoid olasılık (anaerobik olasılığı) → `confidence = |proba − 0.5| × 2`.
+- Arama sonucu en iyi hiperparametreler: `units_1=64`, `units_2=16`, `dropout_1=0.1`, `dropout_2=0.5`, `l2=0`, `lr=1e-3` (10 trial, en iyi `val_auc` ≈ 0.846).
+
+### Değerlendirme
+
+Test seti: 13.884 antrenman (6.980 aerobik / 6.904 anaerobik). Train/test bölmesi **antrenman bazlıdır** (kullanıcı bazlı değil): aynı kullanıcının farklı antrenmanları hem eğitimde hem testte bulunabilir. Bu yüzden skorlar, modelin *daha önce hiç görmediği bir kullanıcıya* genellemesini değil, görülmemiş antrenmanlara genellemesini ölçer. Etiket, kural tabanlı pipeline'ın (`run_zone_pipeline`) ürettiği `training_zone`'dur; yani aşağıdaki metrikler GRU'nun kural tabanlı etikete **sadakatini** ölçer, bağımsız bir gerçek (ground truth) değildir.
+
+| Metrik | Değer |
+|---|---|
+| Test AUC | **0.850** |
+| Test accuracy | 0.76 |
+| Precision / recall (aerobik) | 0.78 / 0.73 |
+| Precision / recall (anaerobik) | 0.75 / 0.79 |
+| Rastgele / çoğunluk sınıfı baseline | AUC 0.50, accuracy ≈ 0.50 |
+
+**Overfit kontrolü — eğitim sırasında `auc` vs `val_auc`:**
+
+![Eğitim ve doğrulama AUC / loss eğrileri](learning_curve_original.png)
+
+İki eğri üst üste ilerliyor: en iyi epoch'ta (47) train AUC 0.847, val AUC 0.849 (50. epoch: 0.848 / 0.848); test AUC 0.850 ile tutarlı. Train–val arasında açılan bir gap yok, yani belirgin bir overfit görünmüyor (val'in train'in bir miktar üstünde olması, dropout'un yalnızca eğitimde aktif olmasından). Eğitim 50 epoch'un sonuna kadar sürdü, `EarlyStopping` tetiklenmedi.
+
+**ROC eğrisi ve confusion matrix (test seti, eşik = 0.5):**
+
+![ROC eğrisi ve confusion matrix](roc_auc_curve.png)
+
+Confusion matrix: 5.114 aerobik doğru, 1.866 aerobik → anaerobik sanıldı; 5.482 anaerobik doğru, 1.422 anaerobik → aerobik sanıldı. Bu grafikler `9_gru_evaluate.ipynb` ile kayıtlı modelden (`gru_model.keras`) yeniden üretilebilir; eğitim eğrisi için ham `history`, `gru_history_original.json` dosyasında.
 
 ## 5. LLM Ajanı
 
@@ -265,6 +290,7 @@ runsight/
 ├── 2..5_*.ipynb              # Özellik çıkarımı, kişisel normalizasyon, etiketleme
 ├── 6_gru_preprocess.ipynb    # GRU için kanal hazırlama, scaler fit
 ├── 7_gru_tuner.ipynb         # Hiperparametre araması, eğitim, değerlendirme
+├── 9_gru_evaluate.ipynb      # Kayıtlı modelle ROC/AUC ve confusion matrix (eğitimi tekrarlamadan)
 ├── 8_gru_deploy.py           # Lambda handler (inference)
 ├── functions.py              # QC, özellik çıkarımı, kural tabanlı pipeline
 ├── Dockerfile                # Lambda/ECR image tanımı
@@ -272,6 +298,9 @@ runsight/
 ├── requirements-deploy.txt   # Sadece inference bağımlılıkları
 ├── gru_model.keras           # Eğitilmiş model
 ├── gru_preprocessing.pkl     # Kanal sırası + scaler'lar
+├── learning_curve_original.png  # Eğitim vs doğrulama AUC/loss eğrisi
+├── gru_history_original.json    # Eğitimin epoch bazlı metrikleri
+├── roc_auc_curve.png         # ROC eğrisi + confusion matrix (test seti)
 ├── onboarding_prompt.md      # Onboarding ajanı sistem promptu
 ├── post_workout_prompt.md    # Antrenman sonrası koç ajanı sistem promptu
 ├── weekly_review_prompt.md   # Haftalık değerlendirme ajanı sistem promptu
